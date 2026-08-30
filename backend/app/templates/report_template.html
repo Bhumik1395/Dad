@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11px;
+        }
+
+        h1 {
+            font-size: 18px;
+            color: #085041;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <img src="{{ company_logo_url }}" height="40" />
+    <h1>{{ report_title }}</h1>
+    <p>Generated: {{ generated_at }}</p>
+    <h2>KPIs</h2>
+    <table>
+        {% for key, value in kpis.items() %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+
+</html>
