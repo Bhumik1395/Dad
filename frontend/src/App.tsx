@@ -19,7 +19,6 @@ export default function App() {
           <Route path="quarterly" element={<QuarterlyAnalysis />} />
           <Route path="employees" element={<EmployeeAnalysis />} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </QueryClientProvider>
   );
