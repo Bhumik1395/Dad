@@ -9,6 +9,15 @@ export interface FocusDashboardResponse {
     };
     charts: {
         visitType: { name: string; value: number }[];
+        statusBreakdown: { name: string; value: number }[];
+        callsOverTime: { month: string; calls: number }[];
+        repeatMachines: { machine: string; calls: number }[];
+    };
+    table: {
+        rows: Record<string, string | number>[];
+        page: number;
+        pageSize: number;
+        totalRows: number;
     };
 }
 
@@ -79,9 +88,11 @@ export async function getFilterOptions(): Promise<FilterOptions> {
 }
 
 export async function getFocusDashboard(
-    filters: Record<string, string>
+    filters: Record<string, string>,
+    page: number = 1,
+    pageSize: number = 50
 ): Promise<FocusDashboardResponse> {
-    const params = new URLSearchParams(filters);
+    const params = new URLSearchParams({ ...filters, page: String(page), page_size: String(pageSize) });
     const res = await fetch(`${API_BASE}/api/dashboard/focus?${params}`, {
         credentials: "include",
     });
