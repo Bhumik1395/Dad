@@ -16,12 +16,12 @@ export default function EmployeeAnalysis() {
     const topByCalls = [...data.rows]
         .sort((a, b) => b.total_calls - a.total_calls)
         .slice(0, 10)
-        .map((r) => ({ name: r.employee_name || r.eng_code, calls: r.total_calls }));
+        .map((r) => ({ name: `${r.eng_code} - ${r.employee_name}`, calls: r.total_calls }));
 
     const topByUnderNorm = [...data.rows]
         .sort((a, b) => b.under_norm_pct - a.under_norm_pct)
         .slice(0, 10)
-        .map((r) => ({ name: r.employee_name || r.eng_code, pct: r.under_norm_pct }));
+        .map((r) => ({ name: `${r.eng_code} - ${r.employee_name}`, pct: r.under_norm_pct }));
 
     const totalPages = Math.max(1, Math.ceil(data.totalRows / data.pageSize));
 

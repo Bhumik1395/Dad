@@ -1,13 +1,28 @@
+import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Scan, BarChart2, Users, RotateCcw } from "lucide-react";
+import { Scan, BarChart2, Users, RotateCcw, FileText } from "lucide-react";
+import { downloadPdfReport } from "../../services/api";
 
 const navItems = [
-    { to: "focus", label: "Focus Mode", icon: Scan },
-    { to: "quarterly", label: "Quarterly Analysis", icon: BarChart2 },
-    { to: "employees", label: "Employee Analysis", icon: Users },
+    { to: "/dashboard/focus", label: "Focus Mode", icon: Scan },
+    { to: "/dashboard/quarterly", label: "Quarterly Analysis", icon: BarChart2 },
+    { to: "/dashboard/employees", label: "Employee Analysis", icon: Users },
 ];
 
 export default function DashboardShell() {
+    const [generating, setGenerating] = useState(false);
+
+    const handleGeneratePdf = async () => {
+        setGenerating(true);
+        try {
+            await downloadPdfReport();
+        } catch {
+            alert("Failed to generate PDF report. Please try again.");
+        } finally {
+            setGenerating(false);
+        }
+    };
+
     return (
         <div className="h-screen flex overflow-hidden" style={{ background: "var(--color-bg)" }}>
             <aside className="w-64 h-screen shrink-0 bg-white border-r flex flex-col justify-between" style={{ borderColor: "var(--color-border)" }}>
@@ -36,7 +51,16 @@ export default function DashboardShell() {
                         ))}
                     </nav>
                 </div>
-                <div className="p-4 border-t shrink-0" style={{ borderColor: "var(--color-border)" }}>
+
+                <div className="p-4 border-t shrink-0 flex flex-col gap-2" style={{ borderColor: "var(--color-border)" }}>
+                    <button
+                        onClick={handleGeneratePdf}
+                        disabled={generating}
+                        className="w-full flex items-center justify-center gap-2 text-sm text-white rounded-lg py-2 disabled:opacity-60"
+                        style={{ background: "var(--color-accent)" }}
+                    >
+                        <FileText size={14} /> {generating ? "Generating…" : "Generate PDF Report"}
+                    </button>
                     <button
                         onClick={() =>
                             fetch(`${import.meta.env.VITE_API_BASE_URL}/api/session`, {

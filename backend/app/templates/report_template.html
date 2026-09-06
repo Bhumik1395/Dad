@@ -6,41 +6,101 @@
         body {
             font-family: Helvetica, Arial, sans-serif;
             font-size: 11px;
+            color: #1a1a1a;
         }
 
         h1 {
-            font-size: 18px;
+            font-size: 20px;
             color: #085041;
+            margin-bottom: 4px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 16px;
+        h2 {
+            font-size: 14px;
+            color: #085041;
+            margin-top: 26px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 4px;
         }
 
-        th,
-        td {
+        .kpi-grid {
+            display: flex;
+            gap: 12px;
+            margin: 14px 0;
+        }
+
+        .kpi-card {
             border: 1px solid #ccc;
-            padding: 4px 8px;
-            text-align: left;
+            border-radius: 6px;
+            padding: 10px 14px;
+            flex: 1;
+        }
+
+        .kpi-label {
+            font-size: 9px;
+            color: #666;
+        }
+
+        .kpi-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .chart-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .chart-box {
+            flex: 1;
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
         }
     </style>
 </head>
 
 <body>
-    <img src="{{ company_logo_url }}" height="40" />
     <h1>{{ report_title }}</h1>
     <p>Generated: {{ generated_at }}</p>
-    <h2>KPIs</h2>
-    <table>
-        {% for key, value in kpis.items() %}
-        <tr>
-            <td>{{ key }}</td>
-            <td>{{ value }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+
+    <h2>Focus Mode Overview</h2>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total Machines</div>
+            <div class="kpi-value">{{ kpis.totalMachines }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Total Calls</div>
+            <div class="kpi-value">{{ kpis.totalCalls }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Under-Norm %</div>
+            <div class="kpi-value">{{ kpis.underNormPct }}%</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Repeat Calls</div>
+            <div class="kpi-value">{{ kpis.repeatCalls }}</div>
+        </div>
+    </div>
+
+    <div class="chart-row">
+        <div class="chart-box"><img src="data:image/png;base64,{{ charts.visitType }}" /></div>
+        <div class="chart-box"><img src="data:image/png;base64,{{ charts.statusBreakdown }}" /></div>
+    </div>
+    <div class="chart-row">
+        <div class="chart-box"><img src="data:image/png;base64,{{ charts.callsOverTime }}" /></div>
+        <div class="chart-box"><img src="data:image/png;base64,{{ charts.repeatMachines }}" /></div>
+    </div>
+
+    <h2>Employee Performance</h2>
+    <div class="chart-row">
+        <div class="chart-box"><img src="data:image/png;base64,{{ charts.employeeCalls }}" /></div>
+        <div class="chart-box"><img src="data:image/png;base64,{{ charts.employeeUnderNorm }}" /></div>
+    </div>
 </body>
 
 </html>

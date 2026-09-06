@@ -63,6 +63,40 @@ export default function FocusMode() {
                         <KpiCard label="Repeat calls" value={data.kpis.repeatCalls} />
                     </div>
 
+                    {!filters.state && data.stateBreakdown.length > 0 && (
+                        <div className="bg-white rounded-xl border overflow-hidden mb-4">
+                            <div className="px-4 pt-3">
+                                <h3 className="text-sm font-medium">State-wise Breakdown</h3>
+                            </div>
+                            <table className="w-full text-sm mt-2">
+                                <thead>
+                                    <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
+                                        <th className="text-left p-3">State</th>
+                                        <th className="text-left p-3">Total Calls</th>
+                                        <th className="text-left p-3">Repeat Calls</th>
+                                        <th className="text-left p-3">Under-Norm</th>
+                                        <th className="text-left p-3">Under-Norm %</th>
+                                        <th className="text-left p-3">Over-Norm</th>
+                                        <th className="text-left p-3">Over-Norm %</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.stateBreakdown.map((row) => (
+                                        <tr key={row.state} className="border-t">
+                                            <td className="p-3 font-medium">{row.state}</td>
+                                            <td className="p-3">{row.total_calls}</td>
+                                            <td className="p-3">{row.repeat_calls}</td>
+                                            <td className="p-3">{row.under_norm_calls}</td>
+                                            <td className="p-3">{row.under_norm_pct}%</td>
+                                            <td className="p-3">{row.over_norm_calls}</td>
+                                            <td className="p-3">{row.over_norm_pct}%</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div className="bg-white rounded-xl border p-4">
                             <h3 className="text-sm font-medium mb-2">Visit Type</h3>

@@ -17,15 +17,12 @@ def compute_focus(
     repeat_counts = filtered.groupby("machine_no").size()
     repeat_calls = int((repeat_counts > 1).sum())
 
-    # Visit type donut
     visit_counts = filtered["visit_type"].value_counts()
     visit_type_data = [{"name": k, "value": int(v)} for k, v in visit_counts.items()]
 
-    # Under-norm vs over-norm (all Status values, not just the boolean)
     status_counts = filtered["status"].value_counts()
     status_data = [{"name": k, "value": int(v)} for k, v in status_counts.items()]
 
-    # Calls over time, grouped by month
     calls_over_time = (
         filtered.dropna(subset=["call_date"])
         .assign(month=lambda d: d["call_date"].dt.strftime("%Y-%m"))
@@ -35,7 +32,6 @@ def compute_focus(
         .to_dict("records")
     )
 
-    # Top repeat machines (only ones with >1 call)
     repeat_machines = (
         repeat_counts[repeat_counts > 1]
         .sort_values(ascending=False)
@@ -45,7 +41,33 @@ def compute_focus(
         .to_dict("records")
     )
 
-    # Paginated detail table
+    # State-wise breakdown table (always computed from the currently filtered set,
+    # excluding state itself so it's meaningful when "All States" is selected)
+    state_grouped = filtered.groupby("state").agg(
+        total_calls=("machine_no", "count"),
+        under_norm_calls=("under_norm", "sum"),
+    ).reset_index()
+    state_grouped["over_norm_calls"] = state_grouped["total_calls"] - state_grouped["under_norm_calls"]
+    state_grouped["under_norm_pct"] = (state_grouped["under_norm_calls"] / state_grouped["total_calls"] * 100).round(1)
+    state_grouped["over_norm_pct"] = (state_grouped["over_norm_calls"] / state_grouped["total_calls"] * 100).round(1)
+
+    repeat_per_state = (
+        filtered.groupby(["state", "machine_no"]).size().reset_index(name="cnt")
+    )
+    repeat_per_state = (
+        repeat_per_state[repeat_per_state["cnt"] > 1]
+        .groupby("state").size().reset_index(name="repeat_calls")
+    )
+    state_grouped = state_grouped.merge(repeat_per_state, on="state", how="left")
+    state_grouped["repeat_calls"] = state_grouped["repeat_calls"].fillna(0).astype(int)
+    state_grouped = state_grouped.sort_values("total_calls", ascending=False)
+
+    state_breakdown = state_grouped[[
+        "state", "total_calls", "repeat_calls",
+        "under_norm_calls", "under_norm_pct",
+        "over_norm_calls", "over_norm_pct",
+    ]].to_dict("records")
+
     table_cols = ["customer", "state", "machine_no", "call_date", "status", "visit_type"]
     table_df = filtered[table_cols].sort_values("call_date", ascending=False)
     start = (page - 1) * page_size
@@ -59,6 +81,7 @@ def compute_focus(
             "underNormPct": round(under_norm_calls / total_calls * 100, 1) if total_calls else 0,
             "repeatCalls": repeat_calls,
         },
+        "stateBreakdown": state_breakdown,
         "charts": {
             "visitType": visit_type_data,
             "statusBreakdown": status_data,

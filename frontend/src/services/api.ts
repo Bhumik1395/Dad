@@ -57,6 +57,38 @@ export interface EmployeeDashboardResponse {
     totalRows: number;
 }
 
+export interface StateBreakdownRow {
+    state: string;
+    total_calls: number;
+    repeat_calls: number;
+    under_norm_calls: number;
+    under_norm_pct: number;
+    over_norm_calls: number;
+    over_norm_pct: number;
+}
+
+export interface FocusDashboardResponse {
+    kpis: {
+        totalMachines: number;
+        totalCalls: number;
+        underNormPct: number;
+        repeatCalls: number;
+    };
+    stateBreakdown: StateBreakdownRow[];
+    charts: {
+        visitType: { name: string; value: number }[];
+        statusBreakdown: { name: string; value: number }[];
+        callsOverTime: { month: string; calls: number }[];
+        repeatMachines: { machine: string; calls: number }[];
+    };
+    table: {
+        rows: Record<string, string | number>[];
+        page: number;
+        pageSize: number;
+        totalRows: number;
+    };
+}
+
 export function uploadExcel(
     file: File,
     onProgress?: (pct: number) => void
@@ -138,4 +170,23 @@ export async function getEmployeeDashboard(
     if (res.status === 401) throw { error: "session_expired" };
     if (!res.ok) throw await res.json();
     return res.json();
+}
+
+export async function downloadPdfReport(): Promise<void> {
+    const res = await fetch(`${API_BASE}/api/reports/pdf`, {
+        method: "POST",
+        credentials: "include",
+    });
+    if (res.status === 401) throw { error: "session_expired" };
+    if (!res.ok) throw await res.json();
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "service_call_report.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
 }
