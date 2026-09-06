@@ -172,8 +172,11 @@ export async function getEmployeeDashboard(
     return res.json();
 }
 
-export async function downloadPdfReport(): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/reports/pdf`, {
+export async function downloadPdfReport(customer?: string): Promise<void> {
+    const params = new URLSearchParams();
+    if (customer) params.set("customer", customer);
+
+    const res = await fetch(`${API_BASE}/api/reports/pdf?${params}`, {
         method: "POST",
         credentials: "include",
     });

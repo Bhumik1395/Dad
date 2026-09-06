@@ -4,10 +4,12 @@ import { getFocusDashboard, getFilterOptions } from "../services/api";
 import { VisitTypeDonut } from "../components/charts/VisitTypeDonut";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
 import { CallDetailTable } from "../components/tables/CallDetailTable";
+import { useFocusFilter } from "../context/FocusFilterContext";
 
 export default function FocusMode() {
     const [filters, setFilters] = useState<Record<string, string>>({});
     const [page, setPage] = useState(1);
+    const { setCustomer } = useFocusFilter();
 
     const { data: filterOptions } = useQuery({
         queryKey: ["filterOptions"],
@@ -27,6 +29,7 @@ export default function FocusMode() {
             else delete next[key];
             return next;
         });
+        if (key === "customer") setCustomer(value);
     };
 
     return (

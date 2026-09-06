@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { Scan, BarChart2, Users, RotateCcw, FileText } from "lucide-react";
 import { downloadPdfReport } from "../../services/api";
+import { FocusFilterProvider, useFocusFilter } from "../../context/FocusFilterContext";
 
 const navItems = [
     { to: "/dashboard/focus", label: "Focus Mode", icon: Scan },
@@ -9,13 +10,14 @@ const navItems = [
     { to: "/dashboard/employees", label: "Employee Analysis", icon: Users },
 ];
 
-export default function DashboardShell() {
+function DashboardShellInner() {
     const [generating, setGenerating] = useState(false);
+    const { customer } = useFocusFilter();
 
     const handleGeneratePdf = async () => {
         setGenerating(true);
         try {
-            await downloadPdfReport();
+            await downloadPdfReport(customer);
         } catch {
             alert("Failed to generate PDF report. Please try again.");
         } finally {
@@ -53,6 +55,9 @@ export default function DashboardShell() {
                 </div>
 
                 <div className="p-4 border-t shrink-0 flex flex-col gap-2" style={{ borderColor: "var(--color-border)" }}>
+                    {customer && (
+                        <p className="text-xs text-gray-500 px-1">PDF for: <span className="font-medium text-gray-700">{customer}</span></p>
+                    )}
                     <button
                         onClick={handleGeneratePdf}
                         disabled={generating}
@@ -79,5 +84,13 @@ export default function DashboardShell() {
                 <Outlet />
             </main>
         </div>
+    );
+}
+
+export default function DashboardShell() {
+    return (
+        <FocusFilterProvider>
+            <DashboardShellInner />
+        </FocusFilterProvider>
     );
 }
