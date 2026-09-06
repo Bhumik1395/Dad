@@ -1,13 +1,24 @@
 import pandas as pd
+from app.services.employee_mapping_service import load_employee_mapping
 
 
 def compute_employees(df: pd.DataFrame, page: int = 1, page_size: int = 50) -> dict:
-    grouped = df.groupby(["eng_code", "employee_name"]).agg(
+    mapping = load_employee_mapping()
+
+    grouped = df.groupby("eng_code").agg(
         total_calls=("machine_no", "count"),
         under_norm_calls=("under_norm", "sum"),
         physical=("visit_type", lambda s: (s == "Physical").sum()),
         online=("visit_type", lambda s: (s == "Online").sum()),
+        fallback_name=("employee_name", "first"),  # from the uploaded Excel's "Owned By" column
     ).reset_index()
+
+    # Prefer the canonical name from the reference mapping; fall back to
+    # whatever the uploaded file's "Owned By" column had if the Eng Code
+    # isn't found in the reference table
+    grouped["employee_name"] = grouped["eng_code"].map(mapping).fillna(grouped["fallback_name"])
+    grouped = grouped.drop(columns=["fallback_name"])
+
     grouped["under_norm_pct"] = (grouped["under_norm_calls"] / grouped["total_calls"] * 100).round(1)
     grouped = grouped.sort_values("total_calls", ascending=False)
 
@@ -20,23 +31,3 @@ def compute_employees(df: pd.DataFrame, page: int = 1, page_size: int = 50) -> d
         "pageSize": page_size,
         "totalRows": len(grouped),
     }
-
-def compute_employee_top(df: pd.DataFrame, top_n: int = 10) -> dict:
-    grouped = df.groupby(["eng_code", "employee_name"]).agg(
-        total_calls=("machine_no", "count"),
-        under_norm_calls=("under_norm", "sum"),
-    ).reset_index()
-    grouped["under_norm_pct"] = (grouped["under_norm_calls"] / grouped["total_calls"] * 100).round(1)
-    grouped["label"] = grouped["eng_code"] + " - " + grouped["employee_name"]
-
-    by_calls = (
-        grouped.sort_values("total_calls", ascending=False).head(top_n)
-        [["label", "total_calls"]].rename(columns={"label": "name", "total_calls": "value"})
-        .to_dict("records")
-    )
-    by_under_norm = (
-        grouped.sort_values("under_norm_pct", ascending=False).head(top_n)
-        [["label", "under_norm_pct"]].rename(columns={"label": "name", "under_norm_pct": "value"})
-        .to_dict("records")
-    )
-    return {"byCalls": by_calls, "byUnderNorm": by_under_norm}
