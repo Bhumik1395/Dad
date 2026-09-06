@@ -44,14 +44,15 @@ export default function EmployeeAnalysis() {
         <div className="p-6">
             <h1 className="text-2xl font-semibold mb-4">Employee Performance</h1>
 
-            <div className="bg-white rounded-xl border p-4 mb-4">
-                <h3 className="text-sm font-medium mb-2">Calls per Employee</h3>
-                <SimpleBarChart data={topByCalls} xKey="name" yKey="calls" />
-            </div>
-
-            <div className="bg-white rounded-xl border p-4 mb-4">
-                <h3 className="text-sm font-medium mb-2">Under-Norm % per Employee</h3>
-                <SimpleBarChart data={topByUnderNorm} xKey="name" yKey="pct" />
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-white rounded-xl border p-4">
+                    <h3 className="text-sm font-medium mb-2">Calls per Employee</h3>
+                    <SimpleBarChart data={topByCalls} xKey="name" yKey="calls" />
+                </div>
+                <div className="bg-white rounded-xl border p-4">
+                    <h3 className="text-sm font-medium mb-2">Under-Norm % per Employee</h3>
+                    <SimpleBarChart data={topByUnderNorm} xKey="name" yKey="pct" />
+                </div>
             </div>
 
             <div className="bg-white rounded-xl border overflow-hidden">
