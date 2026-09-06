@@ -40,6 +40,23 @@ export interface FilterOptions {
     statuses: string[];
 }
 
+export interface EmployeeRow {
+    eng_code: string;
+    employee_name: string;
+    total_calls: number;
+    under_norm_calls: number;
+    under_norm_pct: number;
+    physical: number;
+    online: number;
+}
+
+export interface EmployeeDashboardResponse {
+    rows: EmployeeRow[];
+    page: number;
+    pageSize: number;
+    totalRows: number;
+}
+
 export function uploadExcel(
     file: File,
     onProgress?: (pct: number) => void
@@ -103,6 +120,19 @@ export async function getFocusDashboard(
 
 export async function getQuarterlyDashboard(): Promise<QuarterlyDashboardResponse> {
     const res = await fetch(`${API_BASE}/api/dashboard/quarterly`, {
+        credentials: "include",
+    });
+    if (res.status === 401) throw { error: "session_expired" };
+    if (!res.ok) throw await res.json();
+    return res.json();
+}
+
+export async function getEmployeeDashboard(
+    page: number = 1,
+    pageSize: number = 50
+): Promise<EmployeeDashboardResponse> {
+    const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+    const res = await fetch(`${API_BASE}/api/dashboard/employees?${params}`, {
         credentials: "include",
     });
     if (res.status === 401) throw { error: "session_expired" };

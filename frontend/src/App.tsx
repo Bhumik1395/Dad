@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardShell from "./components/layout/DashboardShell";
 import FocusMode from "./pages/FocusMode";
 import QuarterlyAnalysis from "./pages/QuarterlyAnalysis";
+import EmployeeAnalysis from "./pages/EmployeeAnalysis";
 import UploadPage from "./pages/UploadPage";
 
 const queryClient = new QueryClient();
@@ -16,6 +17,7 @@ export default function App() {
           <Route index element={<Navigate to="focus" replace />} />
           <Route path="focus" element={<FocusMode />} />
           <Route path="quarterly" element={<QuarterlyAnalysis />} />
+          <Route path="employees" element={<EmployeeAnalysis />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
