@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from app.api import upload
+from app.api import upload, focus
 
 app = FastAPI(title="Excel Analytics Dashboard API")
 
@@ -14,6 +14,7 @@ app.add_middleware(
 )
 
 app.include_router(upload.router)
+app.include_router(focus.router)
 
 
 @app.get("/health")
