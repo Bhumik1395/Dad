@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getFocusDashboard } from "../services/api";
 import { VisitTypeDonut } from "../components/charts/VisitTypeDonut";
+
 export default function FocusMode() {
-    const filters: Record<string, string> = {};
-    const { data, isLoading } = useQuery({
+    const [filters, setFilters] = useState<Record<string, string>>({});
+    const { data, isLoading, isError } = useQuery({
         queryKey: ["focus", filters],
         queryFn: () => getFocusDashboard(filters),
     });
+
     if (isLoading) return <p className="p-6">Loading…</p>;
+    if (isError || !data) return <p className="p-6">Failed to load dashboard data.</p>;
+
     return (
         <div className="p-6">
             <div className="grid grid-cols-4 gap-4 mb-6">
@@ -22,6 +27,7 @@ export default function FocusMode() {
         </div>
     );
 }
+
 function KpiCard({ label, value }: { label: string; value: string | number }) {
     return (
         <div className="bg-white rounded-xl border p-4">
