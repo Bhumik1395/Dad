@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getFocusDashboard } from "../services/api";
+import { getFocusDashboard, getFilterOptions } from "../services/api";
 import { VisitTypeDonut } from "../components/charts/VisitTypeDonut";
 
 export default function FocusMode() {
     const [filters, setFilters] = useState<Record<string, string>>({});
+
+    const { data: filterOptions } = useQuery({
+        queryKey: ["filterOptions"],
+        queryFn: getFilterOptions,
+    });
+
     const { data, isLoading, isError } = useQuery({
         queryKey: ["focus", filters],
         queryFn: () => getFocusDashboard(filters),
@@ -22,33 +28,44 @@ export default function FocusMode() {
     return (
         <div className="p-6">
             <div className="grid grid-cols-4 gap-3 mb-6">
-                <input
-                    type="text"
-                    placeholder="Customer"
+                <select
                     className="border rounded-lg px-3 py-2 text-sm"
                     onChange={(e) => updateFilter("customer", e.target.value)}
-                />
-                <input
-                    type="text"
-                    placeholder="State"
+                >
+                    <option value="">All Customers</option>
+                    {filterOptions?.customers.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                    ))}
+                </select>
+
+                <select
                     className="border rounded-lg px-3 py-2 text-sm"
                     onChange={(e) => updateFilter("state", e.target.value)}
-                />
-                <input
-                    type="text"
-                    placeholder="Machine No."
+                >
+                    <option value="">All States</option>
+                    {filterOptions?.states.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                    ))}
+                </select>
+
+                <select
                     className="border rounded-lg px-3 py-2 text-sm"
                     onChange={(e) => updateFilter("machine", e.target.value)}
-                />
+                >
+                    <option value="">All Machines</option>
+                    {filterOptions?.machines.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                    ))}
+                </select>
+
                 <select
                     className="border rounded-lg px-3 py-2 text-sm"
                     onChange={(e) => updateFilter("status", e.target.value)}
                 >
                     <option value="">All Statuses</option>
-                    <option value="Undernorm">Undernorm</option>
-                    <option value="Overnorm">Overnorm</option>
-                    <option value="Open">Open</option>
-                    <option value="Short Closed">Short Closed</option>
+                    {filterOptions?.statuses.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                    ))}
                 </select>
             </div>
 

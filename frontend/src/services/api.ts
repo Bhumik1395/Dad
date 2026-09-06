@@ -24,6 +24,13 @@ export interface QuarterlyDashboardResponse {
     regionBreakdown: { quarter: string; region: string; calls: number }[];
 }
 
+export interface FilterOptions {
+    customers: string[];
+    states: string[];
+    machines: string[];
+    statuses: string[];
+}
+
 export function uploadExcel(
     file: File,
     onProgress?: (pct: number) => void
@@ -45,7 +52,11 @@ export function uploadExcel(
 
         xhr.onload = () => {
             let body: any = {};
-            try { body = JSON.parse(xhr.responseText); } catch { /* non-JSON response */ }
+            try {
+                body = JSON.parse(xhr.responseText);
+            } catch {
+                /* non-JSON response */
+            }
 
             if (xhr.status >= 200 && xhr.status < 300) {
                 resolve(body);
@@ -58,6 +69,13 @@ export function uploadExcel(
 
         xhr.send(form);
     });
+}
+
+export async function getFilterOptions(): Promise<FilterOptions> {
+    const res = await fetch(`${API_BASE}/api/filters`, { credentials: "include" });
+    if (res.status === 401) throw { error: "session_expired" };
+    if (!res.ok) throw await res.json();
+    return res.json();
 }
 
 export async function getFocusDashboard(

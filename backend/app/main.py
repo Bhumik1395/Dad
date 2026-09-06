@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from app.api import upload, focus, quarterly, employees, reports, session
+from app.api import upload, focus, quarterly, employees, reports, session, filters
 
 app = FastAPI(title="Excel Analytics Dashboard API")
 
@@ -19,7 +20,7 @@ app.include_router(quarterly.router)
 app.include_router(employees.router)
 app.include_router(reports.router)
 app.include_router(session.router)
-
+app.include_router(filters.router)
 
 @app.get("/health")
 def health():
