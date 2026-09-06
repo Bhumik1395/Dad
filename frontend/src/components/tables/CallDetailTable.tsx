@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 export function CallDetailTable({
     rows, page, pageSize, totalRows, onPageChange,
 }: {
@@ -8,10 +10,21 @@ export function CallDetailTable({
     onPageChange: (page: number) => void;
 }) {
     const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+    const [jumpValue, setJumpValue] = useState(String(page));
+
     const columns = ["customer", "state", "machine_no", "call_date", "status", "visit_type"];
     const labels: Record<string, string> = {
         customer: "Customer", state: "State", machine_no: "Machine No.",
         call_date: "Call Date", status: "Status", visit_type: "Visit Type",
+    };
+
+    const handleJump = () => {
+        const n = parseInt(jumpValue, 10);
+        if (!isNaN(n) && n >= 1 && n <= totalPages) {
+            onPageChange(n);
+        } else {
+            setJumpValue(String(page)); // reset to current page if invalid
+        }
     };
 
     return (
@@ -31,8 +44,8 @@ export function CallDetailTable({
                 </tbody>
             </table>
             <div className="flex items-center justify-between p-3 border-t text-sm text-gray-500">
-                <span>Page {page} of {totalPages} ({totalRows.toLocaleString()} total rows)</span>
-                <div className="flex gap-2">
+                <span>{totalRows.toLocaleString()} total rows</span>
+                <div className="flex items-center gap-2">
                     <button
                         disabled={page <= 1}
                         onClick={() => onPageChange(page - 1)}
@@ -40,6 +53,18 @@ export function CallDetailTable({
                     >
                         Prev
                     </button>
+                    <span>Page</span>
+                    <input
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        value={jumpValue}
+                        onChange={(e) => setJumpValue(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleJump()}
+                        onBlur={handleJump}
+                        className="w-14 border rounded-md px-2 py-1 text-center"
+                    />
+                    <span>of {totalPages}</span>
                     <button
                         disabled={page >= totalPages}
                         onClick={() => onPageChange(page + 1)}

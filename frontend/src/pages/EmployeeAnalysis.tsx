@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getEmployeeDashboard } from "../services/api";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
 
 export default function EmployeeAnalysis() {
     const [page, setPage] = useState(1);
+    const [jumpValue, setJumpValue] = useState(String(page));
+
     const { data, isLoading, isError } = useQuery({
         queryKey: ["employees", page],
         queryFn: () => getEmployeeDashboard(page, 50),
     });
+
+    useEffect(() => {
+        setJumpValue(String(page));
+    }, [page]);
 
     if (isLoading) return <p className="p-6">Loading…</p>;
     if (isError || !data) return <p className="p-6">Failed to load dashboard data.</p>;
@@ -24,6 +30,15 @@ export default function EmployeeAnalysis() {
         .map((r) => ({ name: `${r.eng_code} - ${r.employee_name}`, pct: r.under_norm_pct }));
 
     const totalPages = Math.max(1, Math.ceil(data.totalRows / data.pageSize));
+
+    const handleJump = () => {
+        const n = parseInt(jumpValue, 10);
+        if (!isNaN(n) && n >= 1 && n <= totalPages) {
+            setPage(n);
+        } else {
+            setJumpValue(String(page));
+        }
+    };
 
     return (
         <div className="p-6">
@@ -66,11 +81,36 @@ export default function EmployeeAnalysis() {
                         ))}
                     </tbody>
                 </table>
+
                 <div className="flex items-center justify-between p-3 border-t text-sm text-gray-500">
-                    <span>Page {page} of {totalPages} ({data.totalRows.toLocaleString()} total)</span>
-                    <div className="flex gap-2">
-                        <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1 border rounded-md disabled:opacity-40">Prev</button>
-                        <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 border rounded-md disabled:opacity-40">Next</button>
+                    <span>{data.totalRows.toLocaleString()} total</span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            disabled={page <= 1}
+                            onClick={() => setPage((p) => p - 1)}
+                            className="px-3 py-1 border rounded-md disabled:opacity-40"
+                        >
+                            Prev
+                        </button>
+                        <span>Page</span>
+                        <input
+                            type="number"
+                            min={1}
+                            max={totalPages}
+                            value={jumpValue}
+                            onChange={(e) => setJumpValue(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleJump()}
+                            onBlur={handleJump}
+                            className="w-14 border rounded-md px-2 py-1 text-center"
+                        />
+                        <span>of {totalPages}</span>
+                        <button
+                            disabled={page >= totalPages}
+                            onClick={() => setPage((p) => p + 1)}
+                            className="px-3 py-1 border rounded-md disabled:opacity-40"
+                        >
+                            Next
+                        </button>
                     </div>
                 </div>
             </div>
