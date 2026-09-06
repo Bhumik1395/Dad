@@ -37,7 +37,6 @@
 
         .kpi-table td {
             border: 1px solid #ccc;
-            border-radius: 0;
             padding: 8px 10px;
         }
 
@@ -52,11 +51,28 @@
             font-weight: bold;
         }
 
-        .chart-table {
+        .state-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 8px;
-            table-layout: fixed;
+        }
+
+        .state-table th,
+        .state-table td {
+            border: 1px solid #ccc;
+            padding: 5px 8px;
+            text-align: left;
+            font-size: 9.5px;
+        }
+
+        .state-table th {
+            background: #f5f5f5;
+        }
+
+        .chart-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
         }
 
         .chart-table td {
@@ -89,22 +105,34 @@
         </tr>
     </table>
 
-    <table class="chart-table">
+    <h2>State-wise Breakdown</h2>
+    <table class="state-table">
         <tr>
-            <td><img src="data:image/png;base64,{{ charts.visitType }}" /></td>
-            <td><img src="data:image/png;base64,{{ charts.statusBreakdown }}" /></td>
+            <th>State</th>
+            <th>Total Calls</th>
+            <th>Repeat Calls</th>
+            <th>Under-Norm</th>
+            <th>Under-Norm %</th>
+            <th>Over-Norm</th>
+            <th>Over-Norm %</th>
         </tr>
+        {% for row in state_breakdown %}
         <tr>
-            <td><img src="data:image/png;base64,{{ charts.callsOverTime }}" /></td>
-            <td><img src="data:image/png;base64,{{ charts.repeatMachines }}" /></td>
+            <td>{{ row.state }}</td>
+            <td>{{ row.total_calls }}</td>
+            <td>{{ row.repeat_calls }}</td>
+            <td>{{ row.under_norm_calls }}</td>
+            <td>{{ row.under_norm_pct }}%</td>
+            <td>{{ row.over_norm_calls }}</td>
+            <td>{{ row.over_norm_pct }}%</td>
         </tr>
+        {% endfor %}
     </table>
 
-    <h2>Employee Performance</h2>
+    <h2>Top Repeat Machines</h2>
     <table class="chart-table">
         <tr>
-            <td><img src="data:image/png;base64,{{ charts.employeeCalls }}" /></td>
-            <td><img src="data:image/png;base64,{{ charts.employeeUnderNorm }}" /></td>
+            <td><img src="data:image/png;base64,{{ charts.repeatMachines }}" /></td>
         </tr>
     </table>
 </body>
