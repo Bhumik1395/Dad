@@ -10,8 +10,11 @@ export default function UploadPage() {
     const [progress, setProgress] = useState(0);
 
     const mutation = useMutation({
-        mutationFn: (file: File) => uploadExcel(file),
-        onSuccess: () => navigate("/dashboard/focus"),
+        mutationFn: (file: File) => uploadExcel(file, setProgress),
+        onSuccess: () => {
+            setProgress(100);
+            navigate("/dashboard/focus");
+        },
         onError: () => setProgress(0),
     });
 
@@ -91,7 +94,7 @@ export default function UploadPage() {
                         </div>
                         <div className="flex-1">
                             <p className="text-sm font-medium">
-                                {progress < 100 ? "Uploading…" : "Processing your file…"}
+                                {progress < 100 ? `Uploading (${progress}%)…` : "Processing your file…"}
                             </p>
                             <div className="h-1.5 bg-gray-200 rounded-full mt-1.5 overflow-hidden">
                                 <div
