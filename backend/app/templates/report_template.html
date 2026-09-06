@@ -3,6 +3,11 @@
 
 <head>
     <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
         body {
             font-family: Helvetica, Arial, sans-serif;
             font-size: 11px;
@@ -18,47 +23,53 @@
         h2 {
             font-size: 14px;
             color: #085041;
-            margin-top: 26px;
+            margin-top: 22px;
             border-bottom: 1px solid #ccc;
             padding-bottom: 4px;
         }
 
-        .kpi-grid {
-            display: flex;
-            gap: 12px;
-            margin: 14px 0;
+        .kpi-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            table-layout: fixed;
         }
 
-        .kpi-card {
+        .kpi-table td {
             border: 1px solid #ccc;
-            border-radius: 6px;
-            padding: 10px 14px;
-            flex: 1;
+            border-radius: 0;
+            padding: 8px 10px;
         }
 
         .kpi-label {
             font-size: 9px;
             color: #666;
+            display: block;
         }
 
         .kpi-value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
         }
 
-        .chart-row {
-            display: flex;
-            gap: 12px;
-            margin-top: 10px;
+        .chart-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            table-layout: fixed;
         }
 
-        .chart-box {
-            flex: 1;
+        .chart-table td {
+            width: 50%;
             text-align: center;
+            vertical-align: top;
+            padding: 4px;
         }
 
-        img {
-            max-width: 100%;
+        .chart-table img {
+            width: 100%;
+            height: auto;
+            max-width: 320px;
         }
     </style>
 </head>
@@ -68,39 +79,34 @@
     <p>Generated: {{ generated_at }}</p>
 
     <h2>Focus Mode Overview</h2>
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-label">Total Machines</div>
-            <div class="kpi-value">{{ kpis.totalMachines }}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Total Calls</div>
-            <div class="kpi-value">{{ kpis.totalCalls }}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Under-Norm %</div>
-            <div class="kpi-value">{{ kpis.underNormPct }}%</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Repeat Calls</div>
-            <div class="kpi-value">{{ kpis.repeatCalls }}</div>
-        </div>
-    </div>
+    <table class="kpi-table">
+        <tr>
+            <td><span class="kpi-label">Total Machines</span><span class="kpi-value">{{ kpis.totalMachines }}</span>
+            </td>
+            <td><span class="kpi-label">Total Calls</span><span class="kpi-value">{{ kpis.totalCalls }}</span></td>
+            <td><span class="kpi-label">Under-Norm %</span><span class="kpi-value">{{ kpis.underNormPct }}%</span></td>
+            <td><span class="kpi-label">Repeat Calls</span><span class="kpi-value">{{ kpis.repeatCalls }}</span></td>
+        </tr>
+    </table>
 
-    <div class="chart-row">
-        <div class="chart-box"><img src="data:image/png;base64,{{ charts.visitType }}" /></div>
-        <div class="chart-box"><img src="data:image/png;base64,{{ charts.statusBreakdown }}" /></div>
-    </div>
-    <div class="chart-row">
-        <div class="chart-box"><img src="data:image/png;base64,{{ charts.callsOverTime }}" /></div>
-        <div class="chart-box"><img src="data:image/png;base64,{{ charts.repeatMachines }}" /></div>
-    </div>
+    <table class="chart-table">
+        <tr>
+            <td><img src="data:image/png;base64,{{ charts.visitType }}" /></td>
+            <td><img src="data:image/png;base64,{{ charts.statusBreakdown }}" /></td>
+        </tr>
+        <tr>
+            <td><img src="data:image/png;base64,{{ charts.callsOverTime }}" /></td>
+            <td><img src="data:image/png;base64,{{ charts.repeatMachines }}" /></td>
+        </tr>
+    </table>
 
     <h2>Employee Performance</h2>
-    <div class="chart-row">
-        <div class="chart-box"><img src="data:image/png;base64,{{ charts.employeeCalls }}" /></div>
-        <div class="chart-box"><img src="data:image/png;base64,{{ charts.employeeUnderNorm }}" /></div>
-    </div>
+    <table class="chart-table">
+        <tr>
+            <td><img src="data:image/png;base64,{{ charts.employeeCalls }}" /></td>
+            <td><img src="data:image/png;base64,{{ charts.employeeUnderNorm }}" /></td>
+        </tr>
+    </table>
 </body>
 
 </html>
