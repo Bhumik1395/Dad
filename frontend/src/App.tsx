@@ -18,6 +18,7 @@ export default function App() {
           <Route path="focus" element={<FocusMode />} />
           <Route path="quarterly" element={<QuarterlyAnalysis />} />
           <Route path="employees" element={<EmployeeAnalysis />} />
+          <Route path="*" element={<Navigate to="focus" replace />} />
         </Route>
       </Routes>
     </QueryClientProvider>

@@ -2,9 +2,9 @@ import { NavLink, Outlet } from "react-router-dom";
 import { Scan, BarChart2, Users, RotateCcw } from "lucide-react";
 
 const navItems = [
-    { to: "/dashboard/focus", label: "Focus Mode", icon: Scan },
-    { to: "/dashboard/quarterly", label: "Quarterly Analysis", icon: BarChart2 },
-    { to: "/dashboard/employees", label: "Employee Analysis", icon: Users },
+    { to: "focus", label: "Focus Mode", icon: Scan },
+    { to: "quarterly", label: "Quarterly Analysis", icon: BarChart2 },
+    { to: "employees", label: "Employee Analysis", icon: Users },
 ];
 
 export default function DashboardShell() {
