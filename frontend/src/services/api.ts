@@ -218,11 +218,15 @@ export async function downloadPdfReport(customer?: string): Promise<void> {
     if (res.status === 401) throw { error: "session_expired" };
     if (!res.ok) throw await res.json();
 
+    const disposition = res.headers.get("Content-Disposition") || "";
+    const match = disposition.match(/filename="(.+)"/);
+    const filename = match ? match[1] : "service_call_report.pdf";
+
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "service_call_report.pdf";
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();

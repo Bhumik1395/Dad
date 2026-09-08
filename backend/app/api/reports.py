@@ -1,12 +1,21 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import StreamingResponse
 import io
+import pandas as pd
 from app.services.cache_service import get_session_data
 from app.services.focus_analytics import compute_focus
 from app.services.chart_render import render_bar_chart
 from app.services.pdf_service import generate_pdf
 
 router = APIRouter()
+
+
+def _format_period(min_date, max_date) -> str:
+    if pd.isna(min_date) or pd.isna(max_date):
+        return "All Data"
+    if min_date.strftime("%Y-%m") == max_date.strftime("%Y-%m"):
+        return min_date.strftime("%B %Y")
+    return f"{min_date.strftime('%b %Y')} - {max_date.strftime('%b %Y')}"
 
 
 @router.post("/api/reports/pdf")
@@ -19,6 +28,9 @@ def create_report(request: Request, customer: str = None):
         df = get_session_data(session_id)
     except KeyError:
         raise HTTPException(401, {"error": "session_expired"})
+
+    filtered_df = df[df["customer"] == customer] if customer else df
+    period_str = _format_period(filtered_df["call_date"].min(), filtered_df["call_date"].max())
 
     focus_data = compute_focus(df, customer=customer)
 
@@ -33,10 +45,13 @@ def create_report(request: Request, customer: str = None):
         state_breakdown=focus_data["stateBreakdown"],
         charts=charts,
         report_title=report_title,
+        period_str=period_str,
     )
+
+    filename = f"Service Call Report ({period_str}).pdf"
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=report.pdf"},
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
