@@ -6,7 +6,7 @@ router = APIRouter()
 
 
 @router.get("/api/dashboard/employees")
-def dashboard_employees(request: Request, page: int = 1, page_size: int = 50):
+def dashboard_employees(request: Request, page: int = 1, page_size: int = 50, search: str = None):
     session_id = request.cookies.get("session_id")
     if not session_id:
         raise HTTPException(401, {"error": "session_expired"})
@@ -16,4 +16,4 @@ def dashboard_employees(request: Request, page: int = 1, page_size: int = 50):
     except KeyError:
         raise HTTPException(401, {"error": "session_expired"})
 
-    return compute_employees(df, page, page_size)
+    return compute_employees(df, page, page_size, search)

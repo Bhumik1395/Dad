@@ -2,19 +2,26 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getEmployeeDashboard } from "../services/api";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
+import { Search } from "lucide-react";
 
 export default function EmployeeAnalysis() {
     const [page, setPage] = useState(1);
     const [jumpValue, setJumpValue] = useState(String(page));
+    const [search, setSearch] = useState("");
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ["employees", page],
-        queryFn: () => getEmployeeDashboard(page, 50),
+        queryKey: ["employees", page, search],
+        queryFn: () => getEmployeeDashboard(page, 50, search),
     });
 
     useEffect(() => {
         setJumpValue(String(page));
     }, [page]);
+
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+        setPage(1);
+    };
 
     if (isLoading) return <p className="p-6">Loading…</p>;
     if (isError || !data) return <p className="p-6">Failed to load dashboard data.</p>;
@@ -55,6 +62,20 @@ export default function EmployeeAnalysis() {
                 </div>
             </div>
 
+            <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium">All Employees</h3>
+                <div className="relative">
+                    <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search eng code or name…"
+                        value={search}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        className="border rounded-lg pl-8 pr-3 py-1.5 text-sm w-64"
+                    />
+                </div>
+            </div>
+
             <div className="bg-white rounded-xl border overflow-hidden">
                 <table className="w-full text-sm">
                     <thead>
@@ -69,6 +90,9 @@ export default function EmployeeAnalysis() {
                         </tr>
                     </thead>
                     <tbody>
+                        {data.rows.length === 0 && (
+                            <tr><td colSpan={7} className="p-4 text-center text-gray-400">No matching employees</td></tr>
+                        )}
                         {data.rows.map((row) => (
                             <tr key={row.eng_code} className="border-t">
                                 <td className="p-3">{row.eng_code}</td>
@@ -86,13 +110,7 @@ export default function EmployeeAnalysis() {
                 <div className="flex items-center justify-between p-3 border-t text-sm text-gray-500">
                     <span>{data.totalRows.toLocaleString()} total</span>
                     <div className="flex items-center gap-2">
-                        <button
-                            disabled={page <= 1}
-                            onClick={() => setPage((p) => p - 1)}
-                            className="px-3 py-1 border rounded-md disabled:opacity-40"
-                        >
-                            Prev
-                        </button>
+                        <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1 border rounded-md disabled:opacity-40">Prev</button>
                         <span>Page</span>
                         <input
                             type="number"
@@ -105,13 +123,7 @@ export default function EmployeeAnalysis() {
                             className="w-14 border rounded-md px-2 py-1 text-center"
                         />
                         <span>of {totalPages}</span>
-                        <button
-                            disabled={page >= totalPages}
-                            onClick={() => setPage((p) => p + 1)}
-                            className="px-3 py-1 border rounded-md disabled:opacity-40"
-                        >
-                            Next
-                        </button>
+                        <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 border rounded-md disabled:opacity-40">Next</button>
                     </div>
                 </div>
             </div>

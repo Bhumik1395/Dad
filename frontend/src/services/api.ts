@@ -193,9 +193,12 @@ export async function getQuarterlyDashboard(): Promise<QuarterlyDashboardRespons
 
 export async function getEmployeeDashboard(
     page: number = 1,
-    pageSize: number = 50
+    pageSize: number = 50,
+    search?: string
 ): Promise<EmployeeDashboardResponse> {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+    if (search) params.set("search", search);
+
     const res = await fetch(`${API_BASE}/api/dashboard/employees?${params}`, {
         credentials: "include",
     });
