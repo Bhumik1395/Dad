@@ -7,10 +7,9 @@ import { RepeatMachinesTable } from "../components/tables/RepeatMachinesTable";
 import { useFocusFilter } from "../context/FocusFilterContext";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
-function formatHours(hours: number | null): string {
+function formatHoursOnly(hours: number | null): string {
     if (hours === null) return "—";
-    if (hours < 24) return `${hours} hrs`;
-    return `${(hours / 24).toFixed(1)} days`;
+    return `${hours} hrs`;
 }
 
 export default function FocusMode() {
@@ -82,8 +81,8 @@ export default function FocusMode() {
                     </div>
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <KpiCard label="Repeat calls" value={data.kpis.repeatCalls} />
-                        <KpiCard label="Avg local call closure" value={formatHours(data.kpis.avgLocalClosureHours)} />
-                        <KpiCard label="Avg upcountry/remote closure" value={formatHours(data.kpis.avgUpcountryClosureHours)} />
+                        <KpiCard label="Avg local call closure" value={formatHoursOnly(data.kpis.avgLocalClosureHours)} />
+                        <KpiCard label="Avg upcountry/remote closure" value={formatHoursOnly(data.kpis.avgUpcountryClosureHours)} />
                     </div>
 
                     {!filters.state && data.regionBreakdown.length > 0 && (

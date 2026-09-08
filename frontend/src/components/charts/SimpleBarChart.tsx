@@ -9,14 +9,19 @@ export function SimpleBarChart({
 }) {
     const option = {
         color: ["#0F6E56"],
-        grid: { left: 35, right: 10, top: 10, bottom: 70 },
+        grid: { left: 35, right: 10, top: 25, bottom: 70 },
         xAxis: {
             type: "category",
             data: data.map((d) => d[xKey]),
             axisLabel: { rotate: 45, fontSize: 9, interval: 0 },
         },
         yAxis: { type: "value", axisLabel: { fontSize: 9 } },
-        series: [{ type: "bar", data: data.map((d) => d[yKey]), barWidth: "50%" }],
+        series: [{
+            type: "bar",
+            data: data.map((d) => d[yKey]),
+            barWidth: "50%",
+            label: { show: true, position: "top", fontSize: 9, color: "#333" },
+        }],
         tooltip: { trigger: "axis" },
     };
     return <ReactECharts option={option} style={{ height: 200 }} />;

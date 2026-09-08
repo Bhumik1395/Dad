@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { RepeatMachineRow } from "../../services/api";
 
@@ -12,7 +12,12 @@ export function RepeatMachinesTable({
     onPageChange: (page: number) => void;
 }) {
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
+    const [jumpValue, setJumpValue] = useState(String(page));
     const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+
+    useEffect(() => {
+        setJumpValue(String(page));
+    }, [page]);
 
     const toggle = (machine: string) => {
         setExpanded((prev) => {
@@ -21,6 +26,15 @@ export function RepeatMachinesTable({
             else next.add(machine);
             return next;
         });
+    };
+
+    const handleJump = () => {
+        const n = parseInt(jumpValue, 10);
+        if (!isNaN(n) && n >= 1 && n <= totalPages) {
+            onPageChange(n);
+        } else {
+            setJumpValue(String(page));
+        }
     };
 
     return (
@@ -58,23 +72,23 @@ export function RepeatMachinesTable({
                                 {isOpen && (
                                     <tr key={`${row.machine_no}-detail`}>
                                         <td colSpan={3} className="border border-gray-200 p-0">
-                                            <table className="w-full text-sm">
+                                            <table className="w-full text-sm table-fixed">
                                                 <thead>
                                                     <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                                                        <th className="text-left p-2 pl-10">Call Date</th>
-                                                        <th className="text-left p-2">Customer</th>
-                                                        <th className="text-left p-2">State</th>
-                                                        <th className="text-left p-2">Status</th>
-                                                        <th className="text-left p-2">Visit Type</th>
-                                                        <th className="text-left p-2">Dealer Code</th>
-                                                        <th className="text-left p-2">Dealer Name</th>
-                                                        <th className="text-left p-2">City</th>
+                                                        <th className="text-left p-2 pl-10 w-24">Call Date</th>
+                                                        <th className="text-left p-2 w-32">Customer</th>
+                                                        <th className="text-left p-2 w-28">State</th>
+                                                        <th className="text-left p-2 w-20">Status</th>
+                                                        <th className="text-left p-2 w-20">Visit Type</th>
+                                                        <th className="text-left p-2 w-20">Dealer Code</th>
+                                                        <th className="text-left p-2 w-32">Dealer Name</th>
+                                                        <th className="text-left p-2 w-24">City</th>
                                                         <th className="text-left p-2">Remarks / Solution</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {row.calls.map((c, i) => (
-                                                        <tr key={i} className="border-t">
+                                                        <tr key={i} className="border-t align-top">
                                                             <td className="p-2 pl-10">{c.call_date}</td>
                                                             <td className="p-2">{c.customer}</td>
                                                             <td className="p-2">{c.state}</td>
@@ -83,7 +97,7 @@ export function RepeatMachinesTable({
                                                             <td className="p-2">{c.dealer_code}</td>
                                                             <td className="p-2">{c.dealer_name}</td>
                                                             <td className="p-2">{c.city}</td>
-                                                            <td className="p-2 max-w-xs truncate" title={c.remarks}>{c.remarks}</td>
+                                                            <td className="p-2 whitespace-normal break-words">{c.remarks}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -97,9 +111,21 @@ export function RepeatMachinesTable({
                 </tbody>
             </table>
             <div className="flex items-center justify-between p-3 border-t text-sm text-gray-500">
-                <span>Page {page} of {totalPages}</span>
-                <div className="flex gap-2">
+                <span>{totalRows.toLocaleString()} total machines</span>
+                <div className="flex items-center gap-2">
                     <button disabled={page <= 1} onClick={() => onPageChange(page - 1)} className="px-3 py-1 border rounded-md disabled:opacity-40">Prev</button>
+                    <span>Page</span>
+                    <input
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        value={jumpValue}
+                        onChange={(e) => setJumpValue(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleJump()}
+                        onBlur={handleJump}
+                        className="w-14 border rounded-md px-2 py-1 text-center"
+                    />
+                    <span>of {totalPages}</span>
                     <button disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} className="px-3 py-1 border rounded-md disabled:opacity-40">Next</button>
                 </div>
             </div>
