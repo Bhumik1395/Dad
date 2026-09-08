@@ -4,6 +4,7 @@ import DashboardShell from "./components/layout/DashboardShell";
 import FocusMode from "./pages/FocusMode";
 import QuarterlyAnalysis from "./pages/QuarterlyAnalysis";
 import EmployeeAnalysis from "./pages/EmployeeAnalysis";
+import EngineerUtilization from "./pages/EngineerUtilization";
 import UploadPage from "./pages/UploadPage";
 
 const queryClient = new QueryClient();
@@ -18,8 +19,9 @@ export default function App() {
           <Route path="focus" element={<FocusMode />} />
           <Route path="quarterly" element={<QuarterlyAnalysis />} />
           <Route path="employees" element={<EmployeeAnalysis />} />
-          <Route path="*" element={<Navigate to="focus" replace />} />
+          <Route path="utilization" element={<EngineerUtilization />} />
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </QueryClientProvider>
   );

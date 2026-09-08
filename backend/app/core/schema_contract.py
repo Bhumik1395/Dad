@@ -10,11 +10,12 @@ SCHEMA_CONTRACT = {
         "Visit Verification",
         "Eng Code",
         "Owned By",
+        "LOC/UP/REM",
+        "Call Forwarded to",
     ],
     "max_rows": 200_000,
 }
 
-# Maps raw Excel headers -> clean internal field names used throughout the app
 COLUMN_MAP = {
     "Customer Name": "customer",
     "ZM/State": "state",
@@ -24,4 +25,8 @@ COLUMN_MAP = {
     "Visit Verification": "visit_type",
     "Eng Code": "eng_code",
     "Owned By": "employee_name",
+    "Call Attended date": "call_attended_date",
+    "Call Close Date": "call_close_date",
+    "LOC/UP/REM": "loc_up_rem",
+    "Call Forwarded to": "supervisor",
 }

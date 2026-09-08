@@ -89,6 +89,38 @@ export interface FocusDashboardResponse {
     };
 }
 
+export interface EngineerUtilizationRow {
+    eng_code: string;
+    employee_name: string;
+    supervisor: string;
+    total_calls: number;
+    days_quota_met: number;
+    utilization_pct: number;
+    under_norm_pct: number;
+}
+
+export interface SupervisorRow {
+    supervisor: string;
+    num_engineers: number;
+    avg_utilization_pct: number;
+    avg_under_norm_pct: number;
+    total_calls: number;
+}
+
+export interface UtilizationResponse {
+    distinctMonths: number;
+    totalWorkingDays: number;
+    engineers: EngineerUtilizationRow[];
+    supervisors: SupervisorRow[];
+}
+
+export async function getUtilizationDashboard(): Promise<UtilizationResponse> {
+    const res = await fetch(`${API_BASE}/api/dashboard/utilization`, { credentials: "include" });
+    if (res.status === 401) throw { error: "session_expired" };
+    if (!res.ok) throw await res.json();
+    return res.json();
+}
+
 export function uploadExcel(
     file: File,
     onProgress?: (pct: number) => void

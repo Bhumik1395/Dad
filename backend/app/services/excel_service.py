@@ -11,16 +11,27 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     df["call_date"] = pd.to_datetime(df["call_date"], errors="coerce")
 
-    for col in ["customer", "state", "region", "status", "visit_type", "employee_name"]:
+    for col in ["customer", "state", "region", "status", "visit_type", "employee_name", "loc_up_rem", "supervisor"]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
 
-    # Normalize visit type (fixes "Online" vs "online"), drop junk "Open" values
     df["visit_type"] = df["visit_type"].str.title()
     df = df[df["visit_type"].isin(["Physical", "Online"])]
 
-    # Status already contains Undernorm/Overnorm upstream — use directly
     df["under_norm"] = df["status"] == "Undernorm"
+
+    # Normalize inconsistent casing (LOCAL/Local, UPCOUNTRY/Upcountry, etc.)
+    df["loc_up_rem"] = df["loc_up_rem"].str.title()
+
+    if "call_attended_date" in df.columns:
+        df["call_attended_date"] = pd.to_datetime(df["call_attended_date"], errors="coerce")
+        time_to_attend = (df["call_attended_date"] - df["call_date"]).dt.total_seconds() / 3600
+        df["time_to_attend_hours"] = time_to_attend.where(time_to_attend >= 0)
+
+    if "call_close_date" in df.columns:
+        df["call_close_date"] = pd.to_datetime(df["call_close_date"], errors="coerce")
+        time_to_resolve = (df["call_close_date"] - df["call_date"]).dt.total_seconds() / 3600
+        df["time_to_resolve_hours"] = time_to_resolve.where(time_to_resolve >= 0)
 
     df = df.dropna(subset=["call_date", "machine_no"])
     return df

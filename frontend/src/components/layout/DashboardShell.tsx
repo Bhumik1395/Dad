@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Scan, BarChart2, Users, RotateCcw, FileText } from "lucide-react";
+import { Scan, BarChart2, Users, RotateCcw, FileText, Gauge } from "lucide-react";
 import { downloadPdfReport } from "../../services/api";
 import { FocusFilterProvider, useFocusFilter } from "../../context/FocusFilterContext";
 
@@ -8,6 +8,7 @@ const navItems = [
     { to: "/dashboard/focus", label: "Focus Mode", icon: Scan },
     { to: "/dashboard/quarterly", label: "Quarterly Analysis", icon: BarChart2 },
     { to: "/dashboard/employees", label: "Employee Analysis", icon: Users },
+    { to: "/dashboard/utilization", label: "Engineer Utilization", icon: Gauge },
 ];
 
 function DashboardShellInner() {
