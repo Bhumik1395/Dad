@@ -22,7 +22,7 @@ export function SimpleBarChart({
             barWidth: "50%",
             label: { show: true, position: "top", fontSize: 9, color: "#333" },
         }],
-        tooltip: { trigger: "axis" },
+
     };
     return <ReactECharts option={option} style={{ height: 200 }} />;
 }

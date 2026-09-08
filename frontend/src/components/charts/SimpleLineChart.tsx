@@ -13,7 +13,7 @@ export function SimpleLineChart({
         xAxis: { type: "category", data: data.map((d) => d[xKey]) },
         yAxis: { type: "value" },
         series: [{ type: "line", data: data.map((d) => d[yKey]), smooth: true }],
-        tooltip: { trigger: "axis" },
+
     };
     return <ReactECharts option={option} style={{ height: 260 }} />;
 }
