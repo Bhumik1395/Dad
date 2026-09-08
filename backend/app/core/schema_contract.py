@@ -29,4 +29,8 @@ COLUMN_MAP = {
     "Call Close Date": "call_close_date",
     "LOC/UP/REM": "loc_up_rem",
     "Call Forwarded to": "supervisor",
+    "Dealer Code": "dealer_code",
+    "Dealer Name": "dealer_name",
+    "City/Location": "city",
+    "Remarks/Solution Provided": "remarks",
 }

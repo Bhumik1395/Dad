@@ -27,6 +27,10 @@ export interface RepeatMachineCall {
     state: string;
     status: string;
     visit_type: string;
+    dealer_code: string;
+    dealer_name: string;
+    city: string;
+    remarks: string;
 }
 
 export interface RepeatMachineRow {

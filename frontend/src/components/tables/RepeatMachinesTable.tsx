@@ -66,6 +66,10 @@ export function RepeatMachinesTable({
                                                         <th className="text-left p-2">State</th>
                                                         <th className="text-left p-2">Status</th>
                                                         <th className="text-left p-2">Visit Type</th>
+                                                        <th className="text-left p-2">Dealer Code</th>
+                                                        <th className="text-left p-2">Dealer Name</th>
+                                                        <th className="text-left p-2">City</th>
+                                                        <th className="text-left p-2">Remarks / Solution</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -76,6 +80,10 @@ export function RepeatMachinesTable({
                                                             <td className="p-2">{c.state}</td>
                                                             <td className="p-2">{c.status}</td>
                                                             <td className="p-2">{c.visit_type}</td>
+                                                            <td className="p-2">{c.dealer_code}</td>
+                                                            <td className="p-2">{c.dealer_name}</td>
+                                                            <td className="p-2">{c.city}</td>
+                                                            <td className="p-2 max-w-xs truncate" title={c.remarks}>{c.remarks}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>

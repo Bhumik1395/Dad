@@ -29,7 +29,6 @@ def compute_focus(
     repeat_counts = filtered.groupby("machine_no").size()
     repeat_calls = int((repeat_counts > 1).sum())
 
-    # --- Item 1: Avg Local vs Avg Upcountry/Remote closure time ---
     avg_local_closure = None
     avg_upcountry_closure = None
     if "time_to_resolve_hours" in filtered.columns and "loc_up_rem" in filtered.columns:
@@ -40,7 +39,6 @@ def compute_focus(
         if upcountry_rows.notna().any():
             avg_upcountry_closure = round(upcountry_rows.mean(), 1)
 
-    # --- Item 3: Visit Type (Physical vs Online) per Region, for grouped bar chart ---
     region_visit = (
         filtered.groupby(["region", "visit_type"]).size()
         .unstack(fill_value=0)
@@ -63,7 +61,6 @@ def compute_focus(
         .to_dict("records")
     )
 
-    # --- Region / State breakdown (unchanged) ---
     state_grouped = filtered.groupby("state").agg(
         total_calls=("machine_no", "count"),
         under_norm_calls=("under_norm", "sum"),
@@ -102,17 +99,22 @@ def compute_focus(
             "states": states_in_region,
         })
 
-    # --- Item 4: Repeat machines only, expandable, sorted most-to-least ---
     repeat_machine_counts = repeat_counts[repeat_counts > 1].sort_values(ascending=False)
     total_repeat_machines = len(repeat_machine_counts)
     start = (page - 1) * page_size
     page_machine_ids = repeat_machine_counts.iloc[start:start + page_size]
 
+    detail_cols = [
+        "call_date", "customer", "state", "status", "visit_type",
+        "dealer_code", "dealer_name", "city", "remarks",
+    ]
+    available_detail_cols = [c for c in detail_cols if c in filtered.columns]
+
     repeat_machines_rows = []
     for machine_no, count in page_machine_ids.items():
         machine_calls = (
             filtered[filtered["machine_no"] == machine_no]
-            [["call_date", "customer", "state", "status", "visit_type"]]
+            [available_detail_cols]
             .sort_values("call_date")
             .copy()
         )
