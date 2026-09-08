@@ -9,7 +9,7 @@ export function SimpleBarChart({
 }) {
     const option = {
         color: ["#0F6E56"],
-        grid: { left: 35, right: 10, top: 25, bottom: 50 },
+        grid: { left: 35, right: 10, top: 25, bottom: 40 },
         xAxis: {
             type: "category",
             data: data.map((d) => d[xKey]),
