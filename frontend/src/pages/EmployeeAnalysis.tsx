@@ -1,29 +1,31 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { getEmployeeDashboard } from "../services/api";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { Search } from "lucide-react";
 
 export default function EmployeeAnalysis() {
     const [page, setPage] = useState(1);
     const [jumpValue, setJumpValue] = useState(String(page));
-    const [search, setSearch] = useState("");
+    const [searchInput, setSearchInput] = useState("");
+    const debouncedSearch = useDebouncedValue(searchInput, 400);
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ["employees", page, search],
-        queryFn: () => getEmployeeDashboard(page, 50, search),
+        queryKey: ["employees", page, debouncedSearch],
+        queryFn: () => getEmployeeDashboard(page, 50, debouncedSearch),
+        placeholderData: keepPreviousData, // keeps showing old rows while new ones load, no flash/reload feel
     });
 
     useEffect(() => {
         setJumpValue(String(page));
     }, [page]);
 
-    const handleSearchChange = (value: string) => {
-        setSearch(value);
+    useEffect(() => {
         setPage(1);
-    };
+    }, [debouncedSearch]);
 
-    if (isLoading) return <p className="p-6">Loading…</p>;
+    if (isLoading && !data) return <p className="p-6">Loading…</p>;
     if (isError || !data) return <p className="p-6">Failed to load dashboard data.</p>;
 
     const topByCalls = [...data.rows]
@@ -69,8 +71,8 @@ export default function EmployeeAnalysis() {
                     <input
                         type="text"
                         placeholder="Search eng code or name…"
-                        value={search}
-                        onChange={(e) => handleSearchChange(e.target.value)}
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
                         className="border rounded-lg pl-8 pr-3 py-1.5 text-sm w-64"
                     />
                 </div>
