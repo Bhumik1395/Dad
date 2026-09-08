@@ -19,7 +19,7 @@ export function SimpleBarChart({
         series: [{
             type: "bar",
             data: data.map((d) => d[yKey]),
-            barWidth: "30%",
+            barWidth: "60%",
             label: { show: true, position: "top", fontSize: 9, color: "#333" },
         }],
 
