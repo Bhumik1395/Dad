@@ -29,16 +29,32 @@ def compute_focus(
     repeat_counts = filtered.groupby("machine_no").size()
     repeat_calls = int((repeat_counts > 1).sum())
 
-    median_attend = filtered["time_to_attend_hours"].median() if "time_to_attend_hours" in filtered.columns else None
-    median_resolve = filtered["time_to_resolve_hours"].median() if "time_to_resolve_hours" in filtered.columns else None
+    # --- Item 1: Avg Local vs Avg Upcountry/Remote closure time ---
+    avg_local_closure = None
+    avg_upcountry_closure = None
+    if "time_to_resolve_hours" in filtered.columns and "loc_up_rem" in filtered.columns:
+        local_rows = filtered[filtered["loc_up_rem"] == "Local"]["time_to_resolve_hours"]
+        upcountry_rows = filtered[filtered["loc_up_rem"].isin(["Upcountry", "Remote"])]["time_to_resolve_hours"]
+        if local_rows.notna().any():
+            avg_local_closure = round(local_rows.mean(), 1)
+        if upcountry_rows.notna().any():
+            avg_upcountry_closure = round(upcountry_rows.mean(), 1)
 
-    visit_counts = filtered["visit_type"].value_counts()
-    visit_type_data = [{"name": k, "value": int(v)} for k, v in visit_counts.items()]
+    # --- Item 3: Visit Type (Physical vs Online) per Region, for grouped bar chart ---
+    region_visit = (
+        filtered.groupby(["region", "visit_type"]).size()
+        .unstack(fill_value=0)
+        .reset_index()
+    )
+    if "Physical" not in region_visit.columns:
+        region_visit["Physical"] = 0
+    if "Online" not in region_visit.columns:
+        region_visit["Online"] = 0
+    region_visit_type = region_visit[["region", "Physical", "Online"]].sort_values(
+        "Physical", ascending=False
+    ).to_dict("records")
 
-    status_counts = filtered["status"].value_counts()
-    status_data = [{"name": k, "value": int(v)} for k, v in status_counts.items()]
-
-    repeat_machines = (
+    repeat_machines_chart = (
         repeat_counts[repeat_counts > 1]
         .sort_values(ascending=False)
         .head(10)
@@ -47,21 +63,18 @@ def compute_focus(
         .to_dict("records")
     )
 
-    # --- State-level stats (same as before) ---
+    # --- Region / State breakdown (unchanged) ---
     state_grouped = filtered.groupby("state").agg(
         total_calls=("machine_no", "count"),
         under_norm_calls=("under_norm", "sum"),
     ).reset_index()
     state_grouped = _build_breakdown(state_grouped, filtered, "state")
 
-    # Attach each state's region (a state should belong to exactly one region;
-    # take the most common one just in case there's any stray inconsistency)
     state_region_map = filtered.groupby("state")["region"].agg(
         lambda s: s.mode().iloc[0] if not s.mode().empty else s.iloc[0]
     ).reset_index()
     state_grouped = state_grouped.merge(state_region_map, on="state", how="left")
 
-    # --- Region-level totals ---
     region_grouped = filtered.groupby("region").agg(
         total_calls=("machine_no", "count"),
         under_norm_calls=("under_norm", "sum"),
@@ -69,7 +82,6 @@ def compute_focus(
     region_grouped = _build_breakdown(region_grouped, filtered, "region")
     region_grouped = region_grouped.sort_values("total_calls", ascending=False)
 
-    # Nest ranked states inside each region
     region_breakdown = []
     for _, region_row in region_grouped.iterrows():
         region_name = region_row["region"]
@@ -90,11 +102,26 @@ def compute_focus(
             "states": states_in_region,
         })
 
-    table_cols = ["customer", "state", "machine_no", "call_date", "status", "visit_type"]
-    table_df = filtered[table_cols].sort_values("call_date", ascending=False)
+    # --- Item 4: Repeat machines only, expandable, sorted most-to-least ---
+    repeat_machine_counts = repeat_counts[repeat_counts > 1].sort_values(ascending=False)
+    total_repeat_machines = len(repeat_machine_counts)
     start = (page - 1) * page_size
-    page_rows = table_df.iloc[start:start + page_size].copy()
-    page_rows["call_date"] = page_rows["call_date"].dt.strftime("%Y-%m-%d")
+    page_machine_ids = repeat_machine_counts.iloc[start:start + page_size]
+
+    repeat_machines_rows = []
+    for machine_no, count in page_machine_ids.items():
+        machine_calls = (
+            filtered[filtered["machine_no"] == machine_no]
+            [["call_date", "customer", "state", "status", "visit_type"]]
+            .sort_values("call_date")
+            .copy()
+        )
+        machine_calls["call_date"] = machine_calls["call_date"].dt.strftime("%Y-%m-%d")
+        repeat_machines_rows.append({
+            "machine_no": machine_no,
+            "repeat_count": int(count),
+            "calls": machine_calls.to_dict("records"),
+        })
 
     return {
         "kpis": {
@@ -102,19 +129,18 @@ def compute_focus(
             "totalCalls": total_calls,
             "underNormPct": round(under_norm_calls / total_calls * 100, 1) if total_calls else 0,
             "repeatCalls": repeat_calls,
-            "medianTimeToAttendHours": round(median_attend, 1) if median_attend is not None and pd.notna(median_attend) else None,
-            "medianTimeToResolveHours": round(median_resolve, 1) if median_resolve is not None and pd.notna(median_resolve) else None,
+            "avgLocalClosureHours": avg_local_closure,
+            "avgUpcountryClosureHours": avg_upcountry_closure,
         },
         "regionBreakdown": region_breakdown,
         "charts": {
-            "visitType": visit_type_data,
-            "statusBreakdown": status_data,
-            "repeatMachines": repeat_machines,
+            "regionVisitType": region_visit_type,
+            "repeatMachines": repeat_machines_chart,
         },
-        "table": {
-            "rows": page_rows.to_dict("records"),
+        "repeatMachinesTable": {
+            "rows": repeat_machines_rows,
             "page": page,
             "pageSize": page_size,
-            "totalRows": len(table_df),
+            "totalRows": total_repeat_machines,
         },
     }

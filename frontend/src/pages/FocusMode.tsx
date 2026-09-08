@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getFocusDashboard, getFilterOptions } from "../services/api";
-import { VisitTypeDonut } from "../components/charts/VisitTypeDonut";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
-import { CallDetailTable } from "../components/tables/CallDetailTable";
+import { RegionVisitTypeChart } from "../components/charts/RegionVisitTypeChart";
+import { RepeatMachinesTable } from "../components/tables/RepeatMachinesTable";
 import { useFocusFilter } from "../context/FocusFilterContext";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -52,44 +52,21 @@ export default function FocusMode() {
     return (
         <div className="p-6">
             <div className="grid grid-cols-4 gap-3 mb-6">
-                <select
-                    className="border rounded-lg px-3 py-2 text-sm"
-                    onChange={(e) => updateFilter("customer", e.target.value)}
-                >
+                <select className="border rounded-lg px-3 py-2 text-sm" onChange={(e) => updateFilter("customer", e.target.value)}>
                     <option value="">All Customers</option>
-                    {filterOptions?.customers.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                    ))}
+                    {filterOptions?.customers.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
-
-                <select
-                    className="border rounded-lg px-3 py-2 text-sm"
-                    onChange={(e) => updateFilter("state", e.target.value)}
-                >
+                <select className="border rounded-lg px-3 py-2 text-sm" onChange={(e) => updateFilter("state", e.target.value)}>
                     <option value="">All States</option>
-                    {filterOptions?.states.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                    ))}
+                    {filterOptions?.states.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
-
-                <select
-                    className="border rounded-lg px-3 py-2 text-sm"
-                    onChange={(e) => updateFilter("machine", e.target.value)}
-                >
+                <select className="border rounded-lg px-3 py-2 text-sm" onChange={(e) => updateFilter("machine", e.target.value)}>
                     <option value="">All Machines</option>
-                    {filterOptions?.machines.map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                    ))}
+                    {filterOptions?.machines.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
-
-                <select
-                    className="border rounded-lg px-3 py-2 text-sm"
-                    onChange={(e) => updateFilter("status", e.target.value)}
-                >
+                <select className="border rounded-lg px-3 py-2 text-sm" onChange={(e) => updateFilter("status", e.target.value)}>
                     <option value="">All Statuses</option>
-                    {filterOptions?.statuses.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                    ))}
+                    {filterOptions?.statuses.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
             </div>
 
@@ -105,8 +82,8 @@ export default function FocusMode() {
                     </div>
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <KpiCard label="Repeat calls" value={data.kpis.repeatCalls} />
-                        <KpiCard label="Median time to attend" value={formatHours(data.kpis.medianTimeToAttendHours)} />
-                        <KpiCard label="Median time to resolve" value={formatHours(data.kpis.medianTimeToResolveHours)} />
+                        <KpiCard label="Avg local call closure" value={formatHours(data.kpis.avgLocalClosureHours)} />
+                        <KpiCard label="Avg upcountry/remote closure" value={formatHours(data.kpis.avgUpcountryClosureHours)} />
                     </div>
 
                     {!filters.state && data.regionBreakdown.length > 0 && (
@@ -132,11 +109,7 @@ export default function FocusMode() {
                                         const isOpen = expandedRegions.has(region.region);
                                         return (
                                             <>
-                                                <tr
-                                                    key={region.region}
-                                                    className="cursor-pointer hover:bg-gray-50"
-                                                    onClick={() => toggleRegion(region.region)}
-                                                >
+                                                <tr key={region.region} className="cursor-pointer hover:bg-gray-50" onClick={() => toggleRegion(region.region)}>
                                                     <td className="p-3 border border-gray-200 text-gray-400">
                                                         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                                     </td>
@@ -166,9 +139,7 @@ export default function FocusMode() {
                                                                 <tbody>
                                                                     {region.states.map((s, i) => (
                                                                         <tr key={s.state} className="border-t">
-                                                                            <td className="p-2 pl-10">
-                                                                                <span className="text-gray-400 mr-2">#{i + 1}</span>{s.state}
-                                                                            </td>
+                                                                            <td className="p-2 pl-10"><span className="text-gray-400 mr-2">#{i + 1}</span>{s.state}</td>
                                                                             <td className="p-2">{s.total_calls}</td>
                                                                             <td className="p-2">{s.repeat_calls}</td>
                                                                             <td className="p-2">{s.under_norm_calls}</td>
@@ -190,15 +161,9 @@ export default function FocusMode() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="bg-white rounded-xl border p-4">
-                            <h3 className="text-sm font-medium mb-2">Visit Type</h3>
-                            <VisitTypeDonut data={data.charts.visitType} />
-                        </div>
-                        <div className="bg-white rounded-xl border p-4">
-                            <h3 className="text-sm font-medium mb-2">Status Breakdown</h3>
-                            <SimpleBarChart data={data.charts.statusBreakdown} xKey="name" yKey="value" />
-                        </div>
+                    <div className="bg-white rounded-xl border p-4 mb-4">
+                        <h3 className="text-sm font-medium mb-2">Visit Type by Region</h3>
+                        <RegionVisitTypeChart data={data.charts.regionVisitType} />
                     </div>
 
                     <div className="bg-white rounded-xl border p-4 mb-4">
@@ -206,11 +171,11 @@ export default function FocusMode() {
                         <SimpleBarChart data={data.charts.repeatMachines} xKey="machine" yKey="calls" />
                     </div>
 
-                    <CallDetailTable
-                        rows={data.table.rows}
-                        page={data.table.page}
-                        pageSize={data.table.pageSize}
-                        totalRows={data.table.totalRows}
+                    <RepeatMachinesTable
+                        rows={data.repeatMachinesTable.rows}
+                        page={data.repeatMachinesTable.page}
+                        pageSize={data.repeatMachinesTable.pageSize}
+                        totalRows={data.repeatMachinesTable.totalRows}
                         onPageChange={setPage}
                     />
                 </>

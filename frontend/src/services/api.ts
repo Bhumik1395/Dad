@@ -15,23 +15,42 @@ export interface RegionBreakdownRow extends Omit<StateRow, "state"> {
     states: StateRow[];
 }
 
+export interface RegionVisitTypeRow {
+    region: string;
+    Physical: number;
+    Online: number;
+}
+
+export interface RepeatMachineCall {
+    call_date: string;
+    customer: string;
+    state: string;
+    status: string;
+    visit_type: string;
+}
+
+export interface RepeatMachineRow {
+    machine_no: string;
+    repeat_count: number;
+    calls: RepeatMachineCall[];
+}
+
 export interface FocusDashboardResponse {
     kpis: {
         totalMachines: number;
         totalCalls: number;
         underNormPct: number;
         repeatCalls: number;
-        medianTimeToAttendHours: number | null;
-        medianTimeToResolveHours: number | null;
+        avgLocalClosureHours: number | null;
+        avgUpcountryClosureHours: number | null;
     };
     regionBreakdown: RegionBreakdownRow[];
     charts: {
-        visitType: { name: string; value: number }[];
-        statusBreakdown: { name: string; value: number }[];
+        regionVisitType: RegionVisitTypeRow[];
         repeatMachines: { machine: string; calls: number }[];
     };
-    table: {
-        rows: Record<string, string | number>[];
+    repeatMachinesTable: {
+        rows: RepeatMachineRow[];
         page: number;
         pageSize: number;
         totalRows: number;

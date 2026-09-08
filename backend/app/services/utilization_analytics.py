@@ -1,5 +1,5 @@
 import pandas as pd
-from app.services.employee_mapping_service import load_employee_mapping
+from app.services.employee_mapping_service import load_employee_mapping, load_supervisor_mapping
 
 WORKING_DAYS_PER_MONTH = 26
 
@@ -16,11 +16,6 @@ def compute_utilization(df: pd.DataFrame) -> dict:
     distinct_months = d["year_month"].nunique()
     total_working_days = WORKING_DAYS_PER_MONTH * max(distinct_months, 1)
 
-    # Group by eng_code ONLY for the daily quota calc — employee_name (raw
-    # "Owned By") is NOT stable per eng_code in this data (one code can have
-    # several different names attached across rows), so grouping by it too
-    # would silently split one engineer into several rows and duplicate their
-    # totals when merged back in. eng_code is the only reliably unique key.
     daily = (
         d.groupby(["eng_code", "call_day", "quota_bucket"])
         .size()
@@ -47,21 +42,23 @@ def compute_utilization(df: pd.DataFrame) -> dict:
         under_norm_counts[["eng_code", "under_norm_pct"]], on="eng_code", how="left"
     )
 
-    # Supervisor is verified stable per eng_code (each code maps to exactly
-    # one supervisor across all its rows), so a simple "first" is safe here —
-    # unlike employee_name, this one doesn't have the duplication problem.
-    supervisor_lookup = d.groupby("eng_code")["supervisor"].first().reset_index()
-    eng_summary = eng_summary.merge(supervisor_lookup, on="eng_code", how="left")
+    # Supervisor: prefer the canonical Reporting Manager from the employee
+    # master file. Fall back to "Call Forwarded to" from the service-call
+    # data only if this eng_code isn't in the master (e.g. a new hire).
+    supervisor_mapping = load_supervisor_mapping()
+    fallback_supervisor = d.groupby("eng_code")["supervisor"].first().reset_index().rename(
+        columns={"supervisor": "fallback_supervisor"}
+    )
+    eng_summary = eng_summary.merge(fallback_supervisor, on="eng_code", how="left")
+    eng_summary["supervisor"] = eng_summary["eng_code"].map(supervisor_mapping).fillna(eng_summary["fallback_supervisor"])
+    eng_summary = eng_summary.drop(columns=["fallback_supervisor"])
 
-    # Canonical name from the reference mapping file; fall back to the most
-    # frequently occurring raw "Owned By" value for that eng_code if it's
-    # genuinely missing from the mapping (e.g. a new hire not yet added there)
-    mapping = load_employee_mapping()
+    name_mapping = load_employee_mapping()
     fallback_name = d.groupby("eng_code")["employee_name"].agg(
         lambda s: s.mode().iloc[0] if not s.mode().empty else s.iloc[0]
     ).reset_index().rename(columns={"employee_name": "fallback_name"})
     eng_summary = eng_summary.merge(fallback_name, on="eng_code", how="left")
-    eng_summary["employee_name"] = eng_summary["eng_code"].map(mapping).fillna(eng_summary["fallback_name"])
+    eng_summary["employee_name"] = eng_summary["eng_code"].map(name_mapping).fillna(eng_summary["fallback_name"])
     eng_summary = eng_summary.drop(columns=["fallback_name"])
 
     eng_summary["utilization_pct"] = (
