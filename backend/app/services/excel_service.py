@@ -11,6 +11,11 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     df["call_date"] = pd.to_datetime(df["call_date"], errors="coerce")
 
+    # eng_code is mixed-format in the source data (e.g. "CORB0132" and "5154"),
+    # which pandas can silently keep as real integers for the numeric-looking
+    # ones. Force it to string explicitly so it's never ambiguous downstream.
+    df["eng_code"] = df["eng_code"].astype(str).str.strip()
+
     for col in ["customer", "state", "region", "status", "visit_type", "employee_name", "loc_up_rem", "supervisor"]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
@@ -20,7 +25,6 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     df["under_norm"] = df["status"] == "Undernorm"
 
-    # Normalize inconsistent casing (LOCAL/Local, UPCOUNTRY/Upcountry, etc.)
     df["loc_up_rem"] = df["loc_up_rem"].str.title()
 
     if "call_attended_date" in df.columns:

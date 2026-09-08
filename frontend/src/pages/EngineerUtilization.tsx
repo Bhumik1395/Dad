@@ -23,9 +23,9 @@ export default function EngineerUtilization() {
         const q = engineerSearch.toLowerCase();
         return data.engineers.filter(
             (row) =>
-                row.eng_code.toLowerCase().includes(q) ||
-                row.employee_name.toLowerCase().includes(q) ||
-                row.supervisor.toLowerCase().includes(q)
+                String(row.eng_code).toLowerCase().includes(q) ||
+                String(row.employee_name).toLowerCase().includes(q) ||
+                String(row.supervisor).toLowerCase().includes(q)
         );
     }, [data, engineerSearch]);
 
