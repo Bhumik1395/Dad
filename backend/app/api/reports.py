@@ -34,6 +34,11 @@ def create_report(request: Request, customer: str = None):
 
     focus_data = compute_focus(df, customer=customer)
 
+    # Flatten regionBreakdown back into a flat state list for the PDF table
+    state_breakdown = [
+        state for region in focus_data["regionBreakdown"] for state in region["states"]
+    ]
+
     charts = {
         "repeatMachines": render_bar_chart(focus_data["charts"]["repeatMachines"], "machine", "calls"),
     }
@@ -42,7 +47,7 @@ def create_report(request: Request, customer: str = None):
 
     pdf_bytes = generate_pdf(
         kpis=focus_data["kpis"],
-        state_breakdown=focus_data["stateBreakdown"],
+        state_breakdown=state_breakdown,
         charts=charts,
         report_title=report_title,
         period_str=period_str,

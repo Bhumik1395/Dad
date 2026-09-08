@@ -5,10 +5,18 @@ import { VisitTypeDonut } from "../components/charts/VisitTypeDonut";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
 import { CallDetailTable } from "../components/tables/CallDetailTable";
 import { useFocusFilter } from "../context/FocusFilterContext";
+import { ChevronDown, ChevronRight } from "lucide-react";
+
+function formatHours(hours: number | null): string {
+    if (hours === null) return "—";
+    if (hours < 24) return `${hours} hrs`;
+    return `${(hours / 24).toFixed(1)} days`;
+}
 
 export default function FocusMode() {
     const [filters, setFilters] = useState<Record<string, string>>({});
     const [page, setPage] = useState(1);
+    const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
     const { setCustomer } = useFocusFilter();
 
     const { data: filterOptions } = useQuery({
@@ -30,6 +38,15 @@ export default function FocusMode() {
             return next;
         });
         if (key === "customer") setCustomer(value);
+    };
+
+    const toggleRegion = (region: string) => {
+        setExpandedRegions((prev) => {
+            const next = new Set(prev);
+            if (next.has(region)) next.delete(region);
+            else next.add(region);
+            return next;
+        });
     };
 
     return (
@@ -81,22 +98,27 @@ export default function FocusMode() {
 
             {!isLoading && data && (
                 <>
-                    <div className="grid grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-3 gap-4 mb-4">
                         <KpiCard label="Total machines" value={data.kpis.totalMachines} />
                         <KpiCard label="Total calls" value={data.kpis.totalCalls} />
                         <KpiCard label="Under-norm %" value={`${data.kpis.underNormPct}%`} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 mb-6">
                         <KpiCard label="Repeat calls" value={data.kpis.repeatCalls} />
+                        <KpiCard label="Median time to attend" value={formatHours(data.kpis.medianTimeToAttendHours)} />
+                        <KpiCard label="Median time to resolve" value={formatHours(data.kpis.medianTimeToResolveHours)} />
                     </div>
 
-                    {!filters.state && data.stateBreakdown.length > 0 && (
+                    {!filters.state && data.regionBreakdown.length > 0 && (
                         <div className="bg-white rounded-xl border overflow-hidden mb-4">
                             <div className="px-4 pt-3 pb-2">
-                                <h3 className="text-sm font-medium">State-wise Breakdown</h3>
+                                <h3 className="text-sm font-medium">Region-wise Breakdown</h3>
                             </div>
                             <table className="w-full text-sm border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                                        <th className="text-left p-3 border border-gray-200">State</th>
+                                        <th className="text-left p-3 border border-gray-200 w-8"></th>
+                                        <th className="text-left p-3 border border-gray-200">Region</th>
                                         <th className="text-left p-3 border border-gray-200">Total Calls</th>
                                         <th className="text-left p-3 border border-gray-200">Repeat Calls</th>
                                         <th className="text-left p-3 border border-gray-200">Under-Norm</th>
@@ -106,17 +128,63 @@ export default function FocusMode() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {data.stateBreakdown.map((row) => (
-                                        <tr key={row.state}>
-                                            <td className="p-3 border border-gray-200 font-medium">{row.state}</td>
-                                            <td className="p-3 border border-gray-200">{row.total_calls}</td>
-                                            <td className="p-3 border border-gray-200">{row.repeat_calls}</td>
-                                            <td className="p-3 border border-gray-200">{row.under_norm_calls}</td>
-                                            <td className="p-3 border border-gray-200">{row.under_norm_pct}%</td>
-                                            <td className="p-3 border border-gray-200">{row.over_norm_calls}</td>
-                                            <td className="p-3 border border-gray-200">{row.over_norm_pct}%</td>
-                                        </tr>
-                                    ))}
+                                    {data.regionBreakdown.map((region) => {
+                                        const isOpen = expandedRegions.has(region.region);
+                                        return (
+                                            <>
+                                                <tr
+                                                    key={region.region}
+                                                    className="cursor-pointer hover:bg-gray-50"
+                                                    onClick={() => toggleRegion(region.region)}
+                                                >
+                                                    <td className="p-3 border border-gray-200 text-gray-400">
+                                                        {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                                    </td>
+                                                    <td className="p-3 border border-gray-200 font-medium">{region.region}</td>
+                                                    <td className="p-3 border border-gray-200">{region.total_calls}</td>
+                                                    <td className="p-3 border border-gray-200">{region.repeat_calls}</td>
+                                                    <td className="p-3 border border-gray-200">{region.under_norm_calls}</td>
+                                                    <td className="p-3 border border-gray-200">{region.under_norm_pct}%</td>
+                                                    <td className="p-3 border border-gray-200">{region.over_norm_calls}</td>
+                                                    <td className="p-3 border border-gray-200">{region.over_norm_pct}%</td>
+                                                </tr>
+                                                {isOpen && (
+                                                    <tr key={`${region.region}-detail`}>
+                                                        <td colSpan={8} className="border border-gray-200 p-0">
+                                                            <table className="w-full text-sm">
+                                                                <thead>
+                                                                    <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
+                                                                        <th className="text-left p-2 pl-10">State</th>
+                                                                        <th className="text-left p-2">Total Calls</th>
+                                                                        <th className="text-left p-2">Repeat Calls</th>
+                                                                        <th className="text-left p-2">Under-Norm</th>
+                                                                        <th className="text-left p-2">Under-Norm %</th>
+                                                                        <th className="text-left p-2">Over-Norm</th>
+                                                                        <th className="text-left p-2">Over-Norm %</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {region.states.map((s, i) => (
+                                                                        <tr key={s.state} className="border-t">
+                                                                            <td className="p-2 pl-10">
+                                                                                <span className="text-gray-400 mr-2">#{i + 1}</span>{s.state}
+                                                                            </td>
+                                                                            <td className="p-2">{s.total_calls}</td>
+                                                                            <td className="p-2">{s.repeat_calls}</td>
+                                                                            <td className="p-2">{s.under_norm_calls}</td>
+                                                                            <td className="p-2">{s.under_norm_pct}%</td>
+                                                                            <td className="p-2">{s.over_norm_calls}</td>
+                                                                            <td className="p-2">{s.over_norm_pct}%</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

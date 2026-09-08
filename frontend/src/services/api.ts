@@ -1,16 +1,33 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
+export interface StateRow {
+    state: string;
+    total_calls: number;
+    repeat_calls: number;
+    under_norm_calls: number;
+    under_norm_pct: number;
+    over_norm_calls: number;
+    over_norm_pct: number;
+}
+
+export interface RegionBreakdownRow extends Omit<StateRow, "state"> {
+    region: string;
+    states: StateRow[];
+}
+
 export interface FocusDashboardResponse {
     kpis: {
         totalMachines: number;
         totalCalls: number;
         underNormPct: number;
         repeatCalls: number;
+        medianTimeToAttendHours: number | null;
+        medianTimeToResolveHours: number | null;
     };
+    regionBreakdown: RegionBreakdownRow[];
     charts: {
         visitType: { name: string; value: number }[];
         statusBreakdown: { name: string; value: number }[];
-        callsOverTime: { month: string; calls: number }[];
         repeatMachines: { machine: string; calls: number }[];
     };
     table: {
@@ -57,38 +74,6 @@ export interface EmployeeDashboardResponse {
     totalRows: number;
 }
 
-export interface StateBreakdownRow {
-    state: string;
-    total_calls: number;
-    repeat_calls: number;
-    under_norm_calls: number;
-    under_norm_pct: number;
-    over_norm_calls: number;
-    over_norm_pct: number;
-}
-
-export interface FocusDashboardResponse {
-    kpis: {
-        totalMachines: number;
-        totalCalls: number;
-        underNormPct: number;
-        repeatCalls: number;
-    };
-    stateBreakdown: StateBreakdownRow[];
-    charts: {
-        visitType: { name: string; value: number }[];
-        statusBreakdown: { name: string; value: number }[];
-        callsOverTime: { month: string; calls: number }[];
-        repeatMachines: { machine: string; calls: number }[];
-    };
-    table: {
-        rows: Record<string, string | number>[];
-        page: number;
-        pageSize: number;
-        totalRows: number;
-    };
-}
-
 export interface EngineerUtilizationRow {
     eng_code: string;
     employee_name: string;
@@ -112,13 +97,6 @@ export interface UtilizationResponse {
     totalWorkingDays: number;
     engineers: EngineerUtilizationRow[];
     supervisors: SupervisorRow[];
-}
-
-export async function getUtilizationDashboard(): Promise<UtilizationResponse> {
-    const res = await fetch(`${API_BASE}/api/dashboard/utilization`, { credentials: "include" });
-    if (res.status === 401) throw { error: "session_expired" };
-    if (!res.ok) throw await res.json();
-    return res.json();
 }
 
 export function uploadExcel(
@@ -202,6 +180,13 @@ export async function getEmployeeDashboard(
     const res = await fetch(`${API_BASE}/api/dashboard/employees?${params}`, {
         credentials: "include",
     });
+    if (res.status === 401) throw { error: "session_expired" };
+    if (!res.ok) throw await res.json();
+    return res.json();
+}
+
+export async function getUtilizationDashboard(): Promise<UtilizationResponse> {
+    const res = await fetch(`${API_BASE}/api/dashboard/utilization`, { credentials: "include" });
     if (res.status === 401) throw { error: "session_expired" };
     if (!res.ok) throw await res.json();
     return res.json();
