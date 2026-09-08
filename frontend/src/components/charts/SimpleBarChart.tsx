@@ -15,12 +15,12 @@ export function SimpleBarChart({
             data: data.map((d) => d[xKey]),
             axisLabel: { rotate: 0, fontSize: 12, interval: 0 },
         },
-        yAxis: { type: "value", axisLabel: { fontSize: 9 } },
+        yAxis: { type: "value", axisLabel: { fontSize: 12 } },
         series: [{
             type: "bar",
             data: data.map((d) => d[yKey]),
             barWidth: "60%",
-            label: { show: true, position: "top", fontSize: 9, color: "#333" },
+            label: { show: true, position: "top", fontSize: 12, color: "#333" },
         }],
 
     };
