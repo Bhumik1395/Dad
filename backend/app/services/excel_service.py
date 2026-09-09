@@ -14,15 +14,23 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["eng_code"] = df["eng_code"].astype(str).str.strip()
 
     for col in [
-        "customer", "state", "region", "status", "visit_type", "employee_name",
+        "customer", "state", "region", "status", "employee_name",
         "loc_up_rem", "supervisor", "dealer_code", "dealer_name", "city", "remarks",
     ]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
             df[col] = df[col].replace({"nan": "", "None": ""})
 
-    df["visit_type"] = df["visit_type"].str.title()
-    df = df[df["visit_type"].isin(["Physical", "Online"])]
+    # Visit type is optional — some export formats don't include it at all.
+    # When present, normalize and filter to real values as before. When
+    # absent, fill with "Unknown" so downstream charts/tables degrade
+    # gracefully instead of crashing on a missing column.
+    if "visit_type" in df.columns:
+        df["visit_type"] = df["visit_type"].astype(str).str.strip().str.title()
+        df["visit_type"] = df["visit_type"].replace({"Nan": "Unknown", "None": "Unknown"})
+        df = df[df["visit_type"].isin(["Physical", "Online"]) | (df["visit_type"] == "Unknown")]
+    else:
+        df["visit_type"] = "Unknown"
 
     df["under_norm"] = df["status"] == "Undernorm"
 

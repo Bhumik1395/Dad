@@ -7,7 +7,6 @@ SCHEMA_CONTRACT = {
         "Machine No.",
         "Status",
         "Call Date",
-        "Visit Verification",
         "Eng Code",
         "Owned By",
         "LOC/UP/REM",

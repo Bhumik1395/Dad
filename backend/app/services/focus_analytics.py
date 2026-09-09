@@ -44,11 +44,10 @@ def compute_focus(
         .unstack(fill_value=0)
         .reset_index()
     )
-    if "Physical" not in region_visit.columns:
-        region_visit["Physical"] = 0
-    if "Online" not in region_visit.columns:
-        region_visit["Online"] = 0
-    region_visit_type = region_visit[["region", "Physical", "Online"]].sort_values(
+    for col in ["Physical", "Online", "Unknown"]:
+        if col not in region_visit.columns:
+            region_visit[col] = 0
+    region_visit_type = region_visit[["region", "Physical", "Online", "Unknown"]].sort_values(
         "Physical", ascending=False
     ).to_dict("records")
 

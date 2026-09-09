@@ -19,6 +19,7 @@ export interface RegionVisitTypeRow {
     region: string;
     Physical: number;
     Online: number;
+    Unknown: number;
 }
 
 export interface MonthlyTrendRow {
