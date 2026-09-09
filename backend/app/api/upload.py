@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.post("/api/upload")
-async def upload_excel(file: UploadFile = File(...), response: Response = None):
+def upload_excel(file: UploadFile = File(...), response: Response = None):
     if not file.filename.endswith(".xlsx"):
         raise HTTPException(400, {
             "error": "unsupported_format",
@@ -16,7 +16,7 @@ async def upload_excel(file: UploadFile = File(...), response: Response = None):
                        f"Please upload a valid .xlsx file.",
         })
 
-    contents = await file.read()
+    contents = file.file.read()  # sync read, safe here since this whole endpoint runs in a worker thread
     try:
         df = validate_excel(contents)
     except ValidationError as e:
