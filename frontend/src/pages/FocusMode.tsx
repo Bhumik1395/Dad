@@ -122,10 +122,10 @@ export default function FocusMode() {
                                                 </tr>
                                                 {isOpen && (
                                                     <tr key={`${region.region}-detail`}>
-                                                        <td colSpan={8} className="border border-gray-200 p-0">
+                                                        <td colSpan={8} className="border border-gray-200 p-0 bg-gray-50">
                                                             <table className="w-full text-sm border-collapse">
                                                                 <thead>
-                                                                    <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
+                                                                    <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
                                                                         <th className="text-left p-2 pl-10 border border-gray-200">State</th>
                                                                         <th className="text-left p-2 border border-gray-200">Total Calls</th>
                                                                         <th className="text-left p-2 border border-gray-200">Repeat Calls</th>
@@ -135,7 +135,7 @@ export default function FocusMode() {
                                                                         <th className="text-left p-2 border border-gray-200">Over-Norm %</th>
                                                                     </tr>
                                                                 </thead>
-                                                                <tbody>
+                                                                <tbody className="bg-white">
                                                                     {region.states.map((s, i) => (
                                                                         <tr key={s.state}>
                                                                             <td className="p-2 pl-10 border border-gray-200">
