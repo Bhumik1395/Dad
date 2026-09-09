@@ -19,6 +19,7 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     ]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
+            df[col] = df[col].replace({"nan": "", "None": ""})
 
     df["visit_type"] = df["visit_type"].str.title()
     df = df[df["visit_type"].isin(["Physical", "Online"])]
