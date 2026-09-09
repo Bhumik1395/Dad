@@ -125,6 +125,32 @@ def compute_focus(
             "calls": machine_calls.to_dict("records"),
         })
 
+    monthly = filtered.copy()
+    monthly["year_month"] = monthly["call_date"].dt.strftime("%Y-%m")
+
+    calls_per_month = monthly.groupby("year_month").size().reset_index(name="calls")
+
+    under_norm_per_month = monthly.groupby("year_month")["under_norm"].agg(["sum", "count"]).reset_index()
+    under_norm_per_month["under_norm_pct"] = (
+        under_norm_per_month["sum"] / under_norm_per_month["count"] * 100
+    ).round(1)
+
+    # Same "repeat" definition used elsewhere: a machine with >1 call within
+    # the grouping window (here, within that specific month)
+    repeat_per_month = monthly.groupby(["year_month", "machine_no"]).size().reset_index(name="cnt")
+    repeat_per_month = (
+        repeat_per_month[repeat_per_month["cnt"] > 1]
+        .groupby("year_month").size().reset_index(name="repeat_calls")
+    )
+
+    monthly_trend = calls_per_month.merge(
+        under_norm_per_month[["year_month", "under_norm_pct"]], on="year_month", how="left"
+    )
+    monthly_trend = monthly_trend.merge(repeat_per_month, on="year_month", how="left")
+    monthly_trend["repeat_calls"] = monthly_trend["repeat_calls"].fillna(0).astype(int)
+    monthly_trend = monthly_trend.sort_values("year_month")
+    monthly_trend_list = monthly_trend.to_dict("records")
+
     return {
         "kpis": {
             "totalMachines": int(filtered["machine_no"].nunique()),
