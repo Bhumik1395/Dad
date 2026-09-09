@@ -75,7 +75,7 @@ export function RepeatMachinesTable({
                                             <table className="w-full text-sm table-fixed border-collapse">
                                                 <thead>
                                                     <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
-                                                        <th className="text-left p-2 pl-10 border border-gray-200 w-28">Call Date</th>
+                                                        <th className="text-left p-2 pl-10 border border-gray-200 w-40">Call Date</th>
                                                         <th className="text-left p-2 border border-gray-200 w-32">Customer</th>
                                                         <th className="text-left p-2 border border-gray-200 w-28">State</th>
                                                         <th className="text-left p-2 border border-gray-200 w-24">Status</th>
