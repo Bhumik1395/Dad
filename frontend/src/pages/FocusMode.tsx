@@ -123,28 +123,30 @@ export default function FocusMode() {
                                                 {isOpen && (
                                                     <tr key={`${region.region}-detail`}>
                                                         <td colSpan={8} className="border border-gray-200 p-0">
-                                                            <table className="w-full text-sm">
+                                                            <table className="w-full text-sm border-collapse">
                                                                 <thead>
                                                                     <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                                                                        <th className="text-left p-2 pl-10">State</th>
-                                                                        <th className="text-left p-2">Total Calls</th>
-                                                                        <th className="text-left p-2">Repeat Calls</th>
-                                                                        <th className="text-left p-2">Under-Norm</th>
-                                                                        <th className="text-left p-2">Under-Norm %</th>
-                                                                        <th className="text-left p-2">Over-Norm</th>
-                                                                        <th className="text-left p-2">Over-Norm %</th>
+                                                                        <th className="text-left p-2 pl-10 border border-gray-200">State</th>
+                                                                        <th className="text-left p-2 border border-gray-200">Total Calls</th>
+                                                                        <th className="text-left p-2 border border-gray-200">Repeat Calls</th>
+                                                                        <th className="text-left p-2 border border-gray-200">Under-Norm</th>
+                                                                        <th className="text-left p-2 border border-gray-200">Under-Norm %</th>
+                                                                        <th className="text-left p-2 border border-gray-200">Over-Norm</th>
+                                                                        <th className="text-left p-2 border border-gray-200">Over-Norm %</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
                                                                     {region.states.map((s, i) => (
-                                                                        <tr key={s.state} className="border-t">
-                                                                            <td className="p-2 pl-10"><span className="text-gray-400 mr-2">#{i + 1}</span>{s.state}</td>
-                                                                            <td className="p-2">{s.total_calls}</td>
-                                                                            <td className="p-2">{s.repeat_calls}</td>
-                                                                            <td className="p-2">{s.under_norm_calls}</td>
-                                                                            <td className="p-2">{s.under_norm_pct}%</td>
-                                                                            <td className="p-2">{s.over_norm_calls}</td>
-                                                                            <td className="p-2">{s.over_norm_pct}%</td>
+                                                                        <tr key={s.state}>
+                                                                            <td className="p-2 pl-10 border border-gray-200">
+                                                                                <span className="text-gray-400 mr-2">#{i + 1}</span>{s.state}
+                                                                            </td>
+                                                                            <td className="p-2 border border-gray-200">{s.total_calls}</td>
+                                                                            <td className="p-2 border border-gray-200">{s.repeat_calls}</td>
+                                                                            <td className="p-2 border border-gray-200">{s.under_norm_calls}</td>
+                                                                            <td className="p-2 border border-gray-200">{s.under_norm_pct}%</td>
+                                                                            <td className="p-2 border border-gray-200">{s.over_norm_calls}</td>
+                                                                            <td className="p-2 border border-gray-200">{s.over_norm_pct}%</td>
                                                                         </tr>
                                                                     ))}
                                                                 </tbody>
