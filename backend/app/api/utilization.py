@@ -6,7 +6,7 @@ router = APIRouter()
 
 
 @router.get("/api/dashboard/utilization")
-def dashboard_utilization(request: Request):
+def dashboard_utilization(request: Request, customer: str = None):
     session_id = request.cookies.get("session_id")
     if not session_id:
         raise HTTPException(401, {"error": "session_expired"})
@@ -16,4 +16,4 @@ def dashboard_utilization(request: Request):
     except KeyError:
         raise HTTPException(401, {"error": "session_expired"})
 
-    return compute_utilization(df)
+    return compute_utilization(df, customer=customer)

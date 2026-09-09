@@ -208,8 +208,13 @@ export async function getEmployeeDashboard(
     return res.json();
 }
 
-export async function getUtilizationDashboard(): Promise<UtilizationResponse> {
-    const res = await fetch(`${API_BASE}/api/dashboard/utilization`, { credentials: "include" });
+export async function getUtilizationDashboard(customer?: string): Promise<UtilizationResponse> {
+    const params = new URLSearchParams();
+    if (customer) params.set("customer", customer);
+
+    const res = await fetch(`${API_BASE}/api/dashboard/utilization?${params}`, {
+        credentials: "include",
+    });
     if (res.status === 401) throw { error: "session_expired" };
     if (!res.ok) throw await res.json();
     return res.json();

@@ -1,12 +1,19 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getUtilizationDashboard } from "../services/api";
+import { getUtilizationDashboard, getFilterOptions } from "../services/api";
 import { Search, ChevronDown, ChevronRight } from "lucide-react";
 
 export default function EngineerUtilization() {
+    const [customer, setCustomer] = useState("");
+
+    const { data: filterOptions } = useQuery({
+        queryKey: ["filterOptions"],
+        queryFn: getFilterOptions,
+    });
+
     const { data, isLoading, isError } = useQuery({
-        queryKey: ["utilization"],
-        queryFn: getUtilizationDashboard,
+        queryKey: ["utilization", customer],
+        queryFn: () => getUtilizationDashboard(customer || undefined),
     });
 
     const [supervisorSearch, setSupervisorSearch] = useState("");
@@ -42,9 +49,22 @@ export default function EngineerUtilization() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-semibold mb-1">Engineer Utilization</h1>
+            <div className="flex items-center justify-between mb-1">
+                <h1 className="text-2xl font-semibold">Engineer Utilization</h1>
+                <select
+                    className="border rounded-lg px-3 py-2 text-sm"
+                    value={customer}
+                    onChange={(e) => setCustomer(e.target.value)}
+                >
+                    <option value="">All Companies</option>
+                    {filterOptions?.customers.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                    ))}
+                </select>
+            </div>
             <p className="text-sm text-gray-500 mb-6">
                 Based on {data.totalWorkingDays} working days ({data.distinctMonths} month{data.distinctMonths > 1 ? "s" : ""} in this file, 26 working days each)
+                {customer && <> — filtered to <span className="font-medium">{customer}</span></>}
             </p>
 
             <div className="flex items-center justify-between mb-2">
@@ -98,27 +118,27 @@ export default function EngineerUtilization() {
                                     </tr>
                                     {isOpen && (
                                         <tr key={`${row.supervisor}-detail`}>
-                                            <td colSpan={6} className="border border-gray-200 p-0">
-                                                <table className="w-full text-sm">
+                                            <td colSpan={6} className="border border-gray-200 p-0 bg-gray-50">
+                                                <table className="w-full text-sm border-collapse">
                                                     <thead>
-                                                        <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                                                            <th className="text-left p-2 pl-10">Eng Code</th>
-                                                            <th className="text-left p-2">Name</th>
-                                                            <th className="text-left p-2">Total Calls</th>
-                                                            <th className="text-left p-2">Days Quota Met</th>
-                                                            <th className="text-left p-2">Utilization %</th>
-                                                            <th className="text-left p-2">Under-Norm %</th>
+                                                        <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
+                                                            <th className="text-left p-2 pl-10 border border-gray-200">Eng Code</th>
+                                                            <th className="text-left p-2 border border-gray-200">Name</th>
+                                                            <th className="text-left p-2 border border-gray-200">Total Calls</th>
+                                                            <th className="text-left p-2 border border-gray-200">Days Quota Met</th>
+                                                            <th className="text-left p-2 border border-gray-200">Utilization %</th>
+                                                            <th className="text-left p-2 border border-gray-200">Under-Norm %</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody>
+                                                    <tbody className="bg-white">
                                                         {engineers.map((eng) => (
-                                                            <tr key={eng.eng_code} className="border-t">
-                                                                <td className="p-2 pl-10">{eng.eng_code}</td>
-                                                                <td className="p-2">{eng.employee_name}</td>
-                                                                <td className="p-2">{eng.total_calls}</td>
-                                                                <td className="p-2">{eng.days_quota_met}</td>
-                                                                <td className="p-2">{eng.utilization_pct}%</td>
-                                                                <td className="p-2">{eng.under_norm_pct}%</td>
+                                                            <tr key={eng.eng_code}>
+                                                                <td className="p-2 pl-10 border border-gray-200">{eng.eng_code}</td>
+                                                                <td className="p-2 border border-gray-200">{eng.employee_name}</td>
+                                                                <td className="p-2 border border-gray-200">{eng.total_calls}</td>
+                                                                <td className="p-2 border border-gray-200">{eng.days_quota_met}</td>
+                                                                <td className="p-2 border border-gray-200">{eng.utilization_pct}%</td>
+                                                                <td className="p-2 border border-gray-200">{eng.under_norm_pct}%</td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
