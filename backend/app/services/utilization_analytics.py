@@ -4,8 +4,11 @@ from app.services.employee_mapping_service import load_employee_mapping, load_su
 WORKING_DAYS_PER_MONTH = 26
 
 
-def compute_utilization(df: pd.DataFrame) -> dict:
+def compute_utilization(df: pd.DataFrame, customer: str = None) -> dict:
     d = df.copy()
+    if customer:
+        d = d[d["customer"] == customer]
+
     d["call_day"] = d["call_date"].dt.date
     d["year_month"] = d["call_date"].dt.to_period("M")
 
@@ -42,9 +45,6 @@ def compute_utilization(df: pd.DataFrame) -> dict:
         under_norm_counts[["eng_code", "under_norm_pct"]], on="eng_code", how="left"
     )
 
-    # Supervisor: prefer the canonical Reporting Manager from the employee
-    # master file. Fall back to "Call Forwarded to" from the service-call
-    # data only if this eng_code isn't in the master (e.g. a new hire).
     supervisor_mapping = load_supervisor_mapping()
     fallback_supervisor = d.groupby("eng_code")["supervisor"].first().reset_index().rename(
         columns={"supervisor": "fallback_supervisor"}
