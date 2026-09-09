@@ -11,7 +11,12 @@ class ValidationError(Exception):
 
 def validate_excel(file_bytes: bytes) -> pd.DataFrame:
     try:
-        df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=SCHEMA_CONTRACT["sheet_name"])
+        df = pd.read_excel(
+            io.BytesIO(file_bytes),
+            sheet_name=SCHEMA_CONTRACT["sheet_name"],
+            engine="openpyxl",
+            engine_kwargs={"read_only": True},
+        )
     except ValueError:
         raise ValidationError(
             "invalid_sheet",
