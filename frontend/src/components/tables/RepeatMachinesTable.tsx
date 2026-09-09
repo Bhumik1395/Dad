@@ -75,13 +75,13 @@ export function RepeatMachinesTable({
                                             <table className="w-full text-sm table-fixed border-collapse">
                                                 <thead>
                                                     <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
-                                                        <th className="text-left p-2 pl-10 border border-gray-200 w-24">Call Date</th>
+                                                        <th className="text-left p-2 pl-10 border border-gray-200 w-28">Call Date</th>
                                                         <th className="text-left p-2 border border-gray-200 w-32">Customer</th>
                                                         <th className="text-left p-2 border border-gray-200 w-28">State</th>
-                                                        <th className="text-left p-2 border border-gray-200 w-20">Status</th>
-                                                        <th className="text-left p-2 border border-gray-200 w-20">Visit Type</th>
+                                                        <th className="text-left p-2 border border-gray-200 w-24">Status</th>
+                                                        <th className="text-left p-2 border border-gray-200 w-24">Visit Type</th>
                                                         <th className="text-left p-2 border border-gray-200 w-20">Dealer Code</th>
-                                                        <th className="text-left p-2 border border-gray-200 w-32">Dealer Name</th>
+                                                        <th className="text-left p-2 border border-gray-200 w-40">Dealer Name</th>
                                                         <th className="text-left p-2 border border-gray-200 w-24">City</th>
                                                         <th className="text-left p-2 border border-gray-200">Remarks / Solution</th>
                                                     </tr>
@@ -89,12 +89,12 @@ export function RepeatMachinesTable({
                                                 <tbody className="bg-white">
                                                     {row.calls.map((c, i) => (
                                                         <tr key={i} className="align-top">
-                                                            <td className="p-2 pl-10 border border-gray-200">{c.call_date}</td>
+                                                            <td className="p-2 pl-10 border border-gray-200 whitespace-nowrap">{c.call_date}</td>
                                                             <td className="p-2 border border-gray-200">{c.customer}</td>
                                                             <td className="p-2 border border-gray-200">{c.state}</td>
-                                                            <td className="p-2 border border-gray-200">{c.status}</td>
-                                                            <td className="p-2 border border-gray-200">{c.visit_type}</td>
-                                                            <td className="p-2 border border-gray-200">{c.dealer_code}</td>
+                                                            <td className="p-2 border border-gray-200 whitespace-nowrap">{c.status}</td>
+                                                            <td className="p-2 border border-gray-200 whitespace-nowrap">{c.visit_type}</td>
+                                                            <td className="p-2 border border-gray-200 whitespace-nowrap">{c.dealer_code}</td>
                                                             <td className="p-2 border border-gray-200">{c.dealer_name}</td>
                                                             <td className="p-2 border border-gray-200">{c.city}</td>
                                                             <td className="p-2 border border-gray-200 whitespace-normal break-words">{c.remarks}</td>
