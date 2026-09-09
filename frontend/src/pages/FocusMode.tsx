@@ -6,6 +6,7 @@ import { RegionVisitTypeChart } from "../components/charts/RegionVisitTypeChart"
 import { RepeatMachinesTable } from "../components/tables/RepeatMachinesTable";
 import { useFocusFilter } from "../context/FocusFilterContext";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { MonthlyTrendChart } from "../components/charts/MonthlyTrendChart";
 
 function formatHoursOnly(hours: number | null): string {
     if (hours === null) return "—";
@@ -165,6 +166,11 @@ export default function FocusMode() {
                     <div className="bg-white rounded-xl border p-4 mb-4">
                         <h3 className="text-sm font-medium mb-2">Visit Type by Region</h3>
                         <RegionVisitTypeChart data={data.charts.regionVisitType} />
+                    </div>
+
+                    <div className="bg-white rounded-xl border p-4 mb-4">
+                        <h3 className="text-sm font-medium mb-2">Month-on-Month Trend</h3>
+                        <MonthlyTrendChart data={data.monthlyTrend} />
                     </div>
 
                     <div className="bg-white rounded-xl border p-4 mb-4">

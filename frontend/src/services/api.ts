@@ -21,6 +21,13 @@ export interface RegionVisitTypeRow {
     Online: number;
 }
 
+export interface MonthlyTrendRow {
+    year_month: string;
+    calls: number;
+    repeat_calls: number;
+    under_norm_pct: number;
+}
+
 export interface RepeatMachineCall {
     call_date: string;
     customer: string;
@@ -49,6 +56,7 @@ export interface FocusDashboardResponse {
         avgUpcountryClosureHours: number | null;
     };
     regionBreakdown: RegionBreakdownRow[];
+    monthlyTrend: MonthlyTrendRow[];
     charts: {
         regionVisitType: RegionVisitTypeRow[];
         repeatMachines: { machine: string; calls: number }[];
