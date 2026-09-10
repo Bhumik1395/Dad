@@ -2,7 +2,7 @@ import ReactECharts from "echarts-for-react";
 
 export function RegionVisitTypeChart({ data }: { data: { region: string; Physical: number; Online: number; Unknown: number }[] }) {
     const option = {
-        color: ["#0F6E56", "#7DC9B0", "#9CA3AF"],
+        color: ["#D32337", "#7DC9B0", "#9CA3AF"],
         legend: { top: 0, textStyle: { fontSize: 10 } },
         grid: { left: 40, right: 10, top: 40, bottom: 30 },
         xAxis: { type: "category", data: data.map((d) => d.region), axisLabel: { fontSize: 10 } },

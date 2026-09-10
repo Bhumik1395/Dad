@@ -3,7 +3,7 @@ import type { MonthlyTrendRow } from "../../services/api";
 
 export function MonthlyTrendChart({ data }: { data: MonthlyTrendRow[] }) {
     const option = {
-        color: ["#0F6E56", "#4A9B84", "#8FC9B5"],
+        color: ["#D32337", "#4A9B84", "#8FC9B5"],
         legend: { top: 0, textStyle: { fontSize: 12 } },
         grid: { left: 55, right: 55, top: 50, bottom: 40 },
         xAxis: { type: "category", data: data.map((d) => d.year_month), axisLabel: { fontSize: 12 } },

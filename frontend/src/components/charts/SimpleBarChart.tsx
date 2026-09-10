@@ -8,7 +8,7 @@ export function SimpleBarChart({
     yKey: string;
 }) {
     const option = {
-        color: ["#0F6E56"],
+        color: ["#D32337"],
         grid: { left: 35, right: 10, top: 25, bottom: 40 },
         xAxis: {
             type: "category",

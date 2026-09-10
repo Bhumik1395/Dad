@@ -8,7 +8,7 @@ export function SimpleLineChart({
     yKey: string;
 }) {
     const option = {
-        color: ["#0F6E56"],
+        color: ["#D32337"],
         grid: { left: 40, right: 20, top: 20, bottom: 30 },
         xAxis: { type: "category", data: data.map((d) => d[xKey]) },
         yAxis: { type: "value" },

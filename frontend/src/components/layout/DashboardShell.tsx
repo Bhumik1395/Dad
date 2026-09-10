@@ -31,7 +31,7 @@ function DashboardShellInner() {
             <aside className="w-64 h-screen shrink-0 bg-white border-r flex flex-col justify-between" style={{ borderColor: "var(--color-border)" }}>
                 <div>
                     <div className="p-6">
-                        <h1 className="text-lg font-bold" style={{ color: "var(--color-accent)" }}>Service Call</h1>
+                        <h1 className="text-lg font-bold" style={{ color: "var(--color-accent)" }}>Corob Service</h1>
                         <p className="text-xs text-gray-500">Analytics Dashboard</p>
                     </div>
                     <nav className="px-3">
