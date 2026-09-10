@@ -13,7 +13,7 @@ export function SimpleBarChart({
         xAxis: {
             type: "category",
             data: data.map((d) => d[xKey]),
-            axisLabel: { rotate: 0, fontSize: 12, interval: 0 },
+            axisLabel: { rotate: 45, fontSize: 12, interval: 0 },
         },
         yAxis: { type: "value", axisLabel: { fontSize: 12 } },
         series: [{
