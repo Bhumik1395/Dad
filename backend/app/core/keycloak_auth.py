@@ -33,10 +33,19 @@ _JWKS_TTL_SECONDS = 3600
 def _get_jwks() -> dict:
     now = time.time()
     if _jwks_cache["keys"] is None or (now - _jwks_cache["fetched_at"]) > _JWKS_TTL_SECONDS:
-        resp = httpx.get(KEYCLOAK_JWKS_URL, timeout=5.0)
-        resp.raise_for_status()
-        _jwks_cache["keys"] = resp.json()
-        _jwks_cache["fetched_at"] = now
+        try:
+            resp = httpx.get(KEYCLOAK_JWKS_URL, timeout=5.0)
+            resp.raise_for_status()
+            _jwks_cache["keys"] = resp.json()
+            _jwks_cache["fetched_at"] = now
+        except (httpx.RequestError, httpx.HTTPStatusError) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail={
+                    "error": "auth_server_unreachable",
+                    "message": f"Unable to reach Keycloak at {KEYCLOAK_JWKS_URL}. Verify KEYCLOAK_BASE_URL is reachable from this server. Error: {exc}",
+                },
+            )
     return _jwks_cache["keys"]
 
 
