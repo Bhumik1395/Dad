@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { BarChart2, UploadCloud, LogOut } from "lucide-react";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../auth/AuthContext";
 
 const navItems = [
     { to: "/customer/pm", label: "PM Overview", icon: BarChart2 },

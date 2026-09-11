@@ -12,7 +12,7 @@ import { AuthProvider } from "./auth/AuthContext";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
-import CustomerDashboardShell from "./layouts/CustomerDashboardShell";
+import CustomerDashboardShell from "./components/layout/CustomerDashboardShell";
 import PmDashboard from "./pages/customer/PmDashboard";
 import PmUploadPage from "./pages/customer/PmUploadPage";
 
