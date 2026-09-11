@@ -1,0 +1,19 @@
+version: "3.8"
+
+# Dev-mode Keycloak. For production: put behind TLS, use `start` (not
+# start-dev) with a real Postgres DB for Keycloak itself, and set
+# KC_HOSTNAME to your real domain.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_change_me
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+    restart: unless-stopped

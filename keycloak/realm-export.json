@@ -1,0 +1,80 @@
+{
+  "realm": "corob",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "customer", "description": "Client-facing user, scoped to one company (PM dashboard)" },
+      { "name": "corob_employee", "description": "Internal Corob staff, cross-company access (existing dashboard)" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "corob-frontend",
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "https://frontend-two-gold-c5r4ec7d0m.vercel.app/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "https://frontend-two-gold-c5r4ec7d0m.vercel.app"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "company-attribute-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "company",
+            "claim.name": "company",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "asianpaints.user",
+      "enabled": true,
+      "email": "user@asianpaints-demo.com",
+      "firstName": "Asian",
+      "lastName": "Paints Demo",
+      "credentials": [{ "type": "password", "value": "changeme123", "temporary": true }],
+      "realmRoles": ["customer"],
+      "attributes": { "company": ["Asian Paints Ltd"] }
+    },
+    {
+      "username": "birlaopus.user",
+      "enabled": true,
+      "email": "user@birlaopus-demo.com",
+      "firstName": "Birla Opus",
+      "lastName": "Demo",
+      "credentials": [{ "type": "password", "value": "changeme123", "temporary": true }],
+      "realmRoles": ["customer"],
+      "attributes": { "company": ["Birla Opus Paints"] }
+    },
+    {
+      "username": "corob.employee",
+      "enabled": true,
+      "email": "employee@corob-demo.com",
+      "firstName": "Corob",
+      "lastName": "Employee",
+      "credentials": [{ "type": "password", "value": "changeme123", "temporary": true }],
+      "realmRoles": ["corob_employee"]
+    }
+  ]
+}

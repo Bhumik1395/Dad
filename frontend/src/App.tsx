@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Navigate, Route, Routes } from "react-router-dom";
+
 import DashboardShell from "./components/layout/DashboardShell";
 import FocusMode from "./pages/FocusMode";
 import QuarterlyAnalysis from "./pages/QuarterlyAnalysis";
@@ -7,22 +8,65 @@ import EmployeeAnalysis from "./pages/EmployeeAnalysis";
 import EngineerUtilization from "./pages/EngineerUtilization";
 import UploadPage from "./pages/UploadPage";
 
+import { AuthProvider } from "./auth/AuthContext";
+import ProtectedRoute from "./auth/ProtectedRoute";
+import Login from "./pages/Login";
+import Unauthorized from "./pages/Unauthorized";
+import CustomerDashboardShell from "./layouts/CustomerDashboardShell";
+import PmDashboard from "./pages/customer/PmDashboard";
+import PmUploadPage from "./pages/customer/PmUploadPage";
+
 const queryClient = new QueryClient();
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Routes>
-        <Route path="/" element={<UploadPage />} />
-        <Route path="/dashboard" element={<DashboardShell />}>
-          <Route index element={<Navigate to="focus" replace />} />
-          <Route path="focus" element={<FocusMode />} />
-          <Route path="quarterly" element={<QuarterlyAnalysis />} />
-          <Route path="employees" element={<EmployeeAnalysis />} />
-          <Route path="utilization" element={<EngineerUtilization />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+
+          {/* Existing Corob-employee app, now behind the corob_employee role */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute allowedRoles={["corob_employee"]}>
+                <UploadPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["corob_employee"]}>
+                <DashboardShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="focus" replace />} />
+            <Route path="focus" element={<FocusMode />} />
+            <Route path="quarterly" element={<QuarterlyAnalysis />} />
+            <Route path="employees" element={<EmployeeAnalysis />} />
+            <Route path="utilization" element={<EngineerUtilization />} />
+          </Route>
+
+          {/* New customer-facing PM dashboard */}
+          <Route
+            path="/customer"
+            element={
+              <ProtectedRoute allowedRoles={["customer", "corob_employee"]}>
+                <CustomerDashboardShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="pm" replace />} />
+            <Route path="pm" element={<PmDashboard />} />
+            <Route path="pm/upload" element={<PmUploadPage />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
