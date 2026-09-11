@@ -75,6 +75,16 @@
       "lastName": "Employee",
       "credentials": [{ "type": "password", "value": "changeme123", "temporary": true }],
       "realmRoles": ["corob_employee"]
+    },
+    {
+      "username": "akzonobel.user",
+      "enabled": true,
+      "email": "user@akzonobel-demo.com",
+      "firstName": "Akzo",
+      "lastName": "Nobel Demo",
+      "credentials": [{ "type": "password", "value": "changeme123", "temporary": false }],
+      "realmRoles": ["customer"],
+      "attributes": { "company": ["AkzoNobel"] }
     }
   ]
 }
