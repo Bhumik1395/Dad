@@ -10,6 +10,8 @@ def _build_breakdown(grouped: pd.DataFrame) -> pd.DataFrame:
 def compute_pm_dashboard(
     df: pd.DataFrame,
     state: str | None = None,
+    month: str | None = None,          # "YYYY-MM", scopes the weekly chart only
+    dealer_code: str | None = None,    # search text, scopes the PM Detail table only
     page: int = 1,
     page_size: int = 50,
 ) -> dict:
@@ -80,8 +82,17 @@ def compute_pm_dashboard(
     ).sort_values("year_month")
     monthly_trend_list = monthly_trend.to_dict("records")
 
-    # --- Weekly analysis: how many new PMs were done each ISO week ---
-    weekly = filtered.copy()
+    # --- Weekly analysis: how many new PMs were done each ISO week,
+    # scoped to one calendar month so the chart doesn't dump every week
+    # of every month onto one axis at once ---
+    available_months = sorted(monthly["year_month"].unique().tolist())
+    weekly_month = month or (available_months[-1] if available_months else None)
+
+    weekly_source = filtered
+    if weekly_month:
+        weekly_source = filtered[filtered["call_date"].dt.strftime("%Y-%m") == weekly_month]
+
+    weekly = weekly_source.copy()
     weekly["year_week"] = weekly["call_date"].dt.strftime("%G-W%V")
     weekly_trend = (
         weekly.groupby("year_week").size().reset_index(name="pm_count").sort_values("year_week")
@@ -89,12 +100,18 @@ def compute_pm_dashboard(
     weekly_trend_list = weekly_trend.to_dict("records")
 
     # --- PM Detail table (replaces the old feedback table) ---
+    detail_source = filtered
+    if dealer_code and "dealer_code" in detail_source.columns:
+        detail_source = detail_source[
+            detail_source["dealer_code"].str.contains(dealer_code, case=False, na=False, regex=False)
+        ]
+
     detail_cols = ["ticket_no", "dealer_code", "dealer_name", "call_date", "remarks"]
-    available_detail_cols = [c for c in detail_cols if c in filtered.columns]
-    total_detail_rows = len(filtered)
+    available_detail_cols = [c for c in detail_cols if c in detail_source.columns]
+    total_detail_rows = len(detail_source)
     start = (page - 1) * page_size
     page_rows = (
-        filtered[available_detail_cols]
+        detail_source[available_detail_cols]
         .sort_values("call_date", ascending=False)
         .iloc[start:start + page_size]
         .copy()
@@ -112,6 +129,8 @@ def compute_pm_dashboard(
         "regionBreakdown": region_breakdown,
         "monthlyTrend": monthly_trend_list,
         "weeklyTrend": weekly_trend_list,
+        "weeklyTrendMonth": weekly_month,
+        "availableMonths": available_months,
         "pmDetailTable": {
             "rows": page_rows.to_dict("records"),
             "page": page,

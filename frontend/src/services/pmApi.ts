@@ -46,6 +46,8 @@ export interface PmDashboardResponse {
     regionBreakdown: PmRegionBreakdownRow[];
     monthlyTrend: PmMonthlyTrendRow[];
     weeklyTrend: PmWeeklyTrendRow[];
+    weeklyTrendMonth: string | null;
+    availableMonths: string[];
     pmDetailTable: {
         rows: PmDetailRow[];
         page: number;
@@ -110,11 +112,20 @@ export function uploadPmFiles(
 
 export async function getPmDashboard(
     token: string,
-    opts: { company?: string; state?: string; page?: number; pageSize?: number } = {}
+    opts: {
+        company?: string;
+        state?: string;
+        month?: string;
+        dealerCode?: string;
+        page?: number;
+        pageSize?: number;
+    } = {}
 ): Promise<PmDashboardResponse> {
     const params = new URLSearchParams();
     if (opts.company) params.set("company", opts.company);
     if (opts.state) params.set("state", opts.state);
+    if (opts.month) params.set("month", opts.month);
+    if (opts.dealerCode) params.set("dealer_code", opts.dealerCode);
     params.set("page", String(opts.page ?? 1));
     params.set("page_size", String(opts.pageSize ?? 50));
 

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, FileText, FileX } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, FileX, Search } from "lucide-react";
 import { getPmDashboard, getPmFilterOptions, pmPdfUrl } from "../../services/pmApi";
 import { useAuth } from "../../auth/AuthContext";
 import { PmMonthlyTrendChart } from "../../components/charts/PmMonthlyTrendChart";
@@ -20,6 +20,18 @@ export default function PmDashboard() {
     const [openPdf, setOpenPdf] = useState<{ url: string; title: string } | null>(null);
     const [pdfMissingTicket, setPdfMissingTicket] = useState<string | null>(null);
 
+    const [weeklyMonth, setWeeklyMonth] = useState<string | undefined>(undefined);
+
+    const [dealerSearchInput, setDealerSearchInput] = useState("");
+    const [dealerSearch, setDealerSearch] = useState("");
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setPage(1);
+            setDealerSearch(dealerSearchInput.trim());
+        }, 300);
+        return () => clearTimeout(t);
+    }, [dealerSearchInput]);
+
     const [employeeCompany, setEmployeeCompany] = useState(myCompany ?? "");
     const isEmployee = roles.includes("corob_employee");
     const activeCompany = isEmployee ? employeeCompany : myCompany ?? undefined;
@@ -31,8 +43,14 @@ export default function PmDashboard() {
     });
 
     const { data, isLoading, isError, error } = useQuery({
-        queryKey: ["pmDashboard", activeCompany, state, page],
-        queryFn: () => getPmDashboard(token!, { company: activeCompany, state: state || undefined, page }),
+        queryKey: ["pmDashboard", activeCompany, state, weeklyMonth, dealerSearch, page],
+        queryFn: () => getPmDashboard(token!, {
+            company: activeCompany,
+            state: state || undefined,
+            month: weeklyMonth,
+            dealerCode: dealerSearch || undefined,
+            page,
+        }),
         enabled: !!token && !!activeCompany,
     });
 
@@ -176,8 +194,21 @@ export default function PmDashboard() {
                     )}
 
                     <div className="bg-white rounded-xl border p-4 mb-4">
-                        <h3 className="text-sm font-medium mb-2">Weekly Analysis</h3>
-                        <p className="text-xs text-gray-500 mb-2">New PMs completed per week</p>
+                        <div className="flex items-center justify-between mb-2">
+                            <div>
+                                <h3 className="text-sm font-medium">Weekly Analysis</h3>
+                                <p className="text-xs text-gray-500">New PMs completed per week</p>
+                            </div>
+                            <select
+                                className="border rounded-lg px-3 py-1.5 text-sm"
+                                value={weeklyMonth ?? data.weeklyTrendMonth ?? ""}
+                                onChange={(e) => setWeeklyMonth(e.target.value || undefined)}
+                            >
+                                {data.availableMonths.map((m) => (
+                                    <option key={m} value={m}>{m}</option>
+                                ))}
+                            </select>
+                        </div>
                         <PmWeeklyTrendChart data={data.weeklyTrend} />
                     </div>
 
@@ -187,9 +218,21 @@ export default function PmDashboard() {
                     </div>
 
                     <div className="bg-white rounded-xl border overflow-hidden mb-4">
-                        <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-                            <h3 className="text-sm font-medium">PM Detail</h3>
-                            <span className="text-xs text-gray-400">{data.pmDetailTable.totalRows} total</span>
+                        <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-3">
+                            <h3 className="text-sm font-medium shrink-0">PM Detail</h3>
+                            <div className="flex items-center gap-3">
+                                <div className="relative">
+                                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        value={dealerSearchInput}
+                                        onChange={(e) => setDealerSearchInput(e.target.value)}
+                                        placeholder="Search dealer code…"
+                                        className="border rounded-lg pl-8 pr-3 py-1.5 text-sm w-56"
+                                        style={{ borderColor: "var(--color-border)" }}
+                                    />
+                                </div>
+                                <span className="text-xs text-gray-400 shrink-0">{data.pmDetailTable.totalRows} total</span>
+                            </div>
                         </div>
 
                         {pdfMissingTicket && (

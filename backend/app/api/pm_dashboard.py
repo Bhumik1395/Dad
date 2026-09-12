@@ -19,6 +19,8 @@ def _resolve_company(user: CurrentUser, company_param: str | None) -> str:
 def pm_dashboard(
     company: str | None = None,
     state: str | None = None,
+    month: str | None = None,
+    dealer_code: str | None = None,
     page: int = 1,
     page_size: int = 50,
     user: CurrentUser = Depends(require_roles("customer", "corob_employee")),
@@ -30,7 +32,9 @@ def pm_dashboard(
             "error": "no_data",
             "message": f"No PM data uploaded yet for {resolved_company}.",
         })
-    return compute_pm_dashboard(df, state=state, page=page, page_size=page_size)
+    return compute_pm_dashboard(
+        df, state=state, month=month, dealer_code=dealer_code, page=page, page_size=page_size
+    )
 
 
 @router.get("/api/pm/filters")
