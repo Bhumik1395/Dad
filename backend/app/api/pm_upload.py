@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 import pandas as pd
 
-from app.core.keycloak_auth import CurrentUser, require_roles
+from app.core.supabase_auth import CurrentUser, require_roles
 from app.services.pm_validation import validate_pm_excel, ValidationError
 from app.services.pm_excel_service import process_pm_dataframe
 from app.services.pm_cache_service import save_pm_data
@@ -39,8 +39,6 @@ def upload_pm_data(
         df = process_pm_dataframe(raw_df)
 
         if user.is_customer:
-            # Customers can only ever ingest their own company's rows, even
-            # if someone hands them a file with other companies mixed in.
             before = len(df)
             df = df[df["company"].str.strip().str.lower() == user.company.strip().lower()]
             if len(df) == 0:
@@ -57,9 +55,6 @@ def upload_pm_data(
     if user.is_customer:
         companies_touched = {user.company: combined}
     else:
-        # Corob employees may upload a file spanning several companies in
-        # one go -- split it out so each company's dashboard stays scoped
-        # correctly.
         companies_touched = {
             company: group for company, group in combined.groupby("company") if company
         }

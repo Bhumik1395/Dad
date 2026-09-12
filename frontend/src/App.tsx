@@ -26,7 +26,6 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Existing Corob-employee app, now behind the corob_employee role */}
           <Route
             path="/"
             element={
@@ -50,7 +49,6 @@ export default function App() {
             <Route path="utilization" element={<EngineerUtilization />} />
           </Route>
 
-          {/* New customer-facing PM dashboard */}
           <Route
             path="/customer"
             element={

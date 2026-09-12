@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { ReactNode } from "react";
-import keycloak from "./keycloak";
+import { supabase } from "../lib/supabaseClient";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 interface AuthContextValue {
     initialized: boolean;
@@ -9,53 +11,99 @@ interface AuthContextValue {
     roles: string[];
     company: string | null;
     token: string | null;
-    login: () => void;
+    signIn: (email: string, password: string) => Promise<string | null>; // returns error message, or null on success
     logout: () => void;
+    authError: string | null;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [initialized, setInitialized] = useState(false);
-    const [authenticated, setAuthenticated] = useState(false);
     const [token, setToken] = useState<string | null>(null);
+    const [username, setUsername] = useState<string | null>(null);
+    const [roles, setRoles] = useState<string[]>([]);
+    const [company, setCompany] = useState<string | null>(null);
+    const [authError, setAuthError] = useState<string | null>(null);
 
-    useEffect(() => {
-        keycloak
-            .init({ onLoad: "check-sso", pkceMethod: "S256", checkLoginIframe: false })
-            .then((authed) => {
-                setAuthenticated(authed);
-                setToken(authed ? keycloak.token ?? null : null);
-                setInitialized(true);
-            })
-            .catch(() => setInitialized(true));
-
-        // Keep the access token fresh; a value under 30s left triggers a refresh.
-        const refreshInterval = setInterval(() => {
-            keycloak.updateToken(30).then((refreshed) => {
-                if (refreshed) setToken(keycloak.token ?? null);
-            }).catch(() => {
-                setAuthenticated(false);
-            });
-        }, 20000);
-
-        return () => clearInterval(refreshInterval);
+    const resolveIdentity = useCallback(async (accessToken: string): Promise<boolean> => {
+        const res = await fetch(`${API_BASE}/api/me`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            setAuthError(body?.detail?.message ?? "Your account isn't authorized yet.");
+            setToken(null);
+            setUsername(null);
+            setRoles([]);
+            setCompany(null);
+            return false;
+        }
+        const data = await res.json();
+        setToken(accessToken);
+        setUsername(data.username);
+        setRoles(data.roles);
+        setCompany(data.company);
+        setAuthError(null);
+        return true;
     }, []);
 
-    const parsed: Record<string, any> = keycloak.tokenParsed ?? {};
-    const roles: string[] = parsed.realm_access?.roles ?? [];
-    const company: string | null = parsed.company ?? null;
-    const username: string | null = parsed.preferred_username ?? null;
+    useEffect(() => {
+        // Supabase persists the session in localStorage itself and keeps the
+        // access token refreshed in the background -- we just react to it.
+        supabase.auth.getSession().then(({ data }) => {
+            const accessToken = data.session?.access_token;
+            (accessToken ? resolveIdentity(accessToken) : Promise.resolve(false)).finally(() =>
+                setInitialized(true)
+            );
+        });
+
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.access_token) {
+                resolveIdentity(session.access_token);
+            } else {
+                setToken(null);
+                setUsername(null);
+                setRoles([]);
+                setCompany(null);
+            }
+        });
+
+        return () => listener.subscription.unsubscribe();
+    }, [resolveIdentity]);
+
+    const signIn = useCallback(async (email: string, password: string): Promise<string | null> => {
+        setAuthError(null);
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) return error.message;
+        if (data.session) {
+            const ok = await resolveIdentity(data.session.access_token);
+            if (!ok) {
+                await supabase.auth.signOut(); // don't leave a "logged in but not authorized" Supabase session dangling
+                return authError ?? "Your account isn't authorized for this app yet.";
+            }
+        }
+        return null;
+    }, [resolveIdentity, authError]);
+
+    const logout = useCallback(() => {
+        supabase.auth.signOut();
+        setToken(null);
+        setUsername(null);
+        setRoles([]);
+        setCompany(null);
+    }, []);
 
     const value: AuthContextValue = {
         initialized,
-        authenticated,
+        authenticated: !!token,
         username,
         roles,
         company,
         token,
-        login: () => keycloak.login(),
-        logout: () => keycloak.logout({ redirectUri: window.location.origin + "/login" }),
+        signIn,
+        logout,
+        authError,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

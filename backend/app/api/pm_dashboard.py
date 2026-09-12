@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from app.core.keycloak_auth import CurrentUser, require_roles
+from app.core.supabase_auth import CurrentUser, require_roles
 from app.services.pm_cache_service import get_pm_data
 from app.services.pm_analytics import compute_pm_dashboard, compute_pm_filter_options
 
@@ -9,7 +9,7 @@ router = APIRouter()
 
 def _resolve_company(user: CurrentUser, company_param: str | None) -> str:
     if user.is_customer:
-        return user.company  # customers can never view another company
+        return user.company
     if not company_param:
         raise HTTPException(400, {"error": "company_required", "message": "Pass ?company= to view a company's PM dashboard."})
     return company_param

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.core.keycloak_auth import CurrentUser, get_current_user
+from app.core.supabase_auth import CurrentUser, get_current_user
 
 router = APIRouter()
 
