@@ -2,53 +2,52 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 export interface PmStateRow {
     state: string;
-    total_calls: number;
-    closed_calls: number;
-    open_calls: number;
+    total_pms: number;
+    closed_pms: number;
+    open_pms: number;
     closure_rate_pct: number;
 }
 
 export interface PmRegionBreakdownRow {
     region: string;
-    total_calls: number;
-    closed_calls: number;
-    open_calls: number;
+    total_pms: number;
+    closed_pms: number;
+    open_pms: number;
     closure_rate_pct: number;
     states: PmStateRow[];
 }
 
 export interface PmMonthlyTrendRow {
     year_month: string;
-    calls: number;
+    pm_count: number;
     closure_rate_pct: number;
 }
 
-export interface PmSatisfactionRow {
-    satisfaction_status: string;
-    count: number;
+export interface PmWeeklyTrendRow {
+    year_week: string;
+    pm_count: number;
 }
 
-export interface PmFeedbackRow {
+export interface PmDetailRow {
     ticket_no: string;
+    dealer_code: string;
+    dealer_name: string;
     call_date: string;
-    state: string;
-    company: string;
-    satisfaction_status: string;
-    feedback: string;
+    remarks: string;
 }
 
 export interface PmDashboardResponse {
     kpis: {
-        totalCalls: number;
+        totalPms: number;
         closureRatePct: number;
         avgLocalClosureHours: number | null;
         avgUpcountryClosureHours: number | null;
     };
-    satisfactionBreakdown: PmSatisfactionRow[];
     regionBreakdown: PmRegionBreakdownRow[];
     monthlyTrend: PmMonthlyTrendRow[];
-    feedbackTable: {
-        rows: PmFeedbackRow[];
+    weeklyTrend: PmWeeklyTrendRow[];
+    pmDetailTable: {
+        rows: PmDetailRow[];
         page: number;
         pageSize: number;
         totalRows: number;
@@ -128,4 +127,14 @@ export async function getPmFilterOptions(token: string, company?: string): Promi
     if (company) params.set("company", company);
     const res = await fetch(`${API_BASE}/api/pm/filters?${params}`, { headers: authHeaders(token) });
     return handle<PmFilterOptions>(res);
+}
+
+/**
+ * PDFs aren't generated -- they're static files you commit to
+ * frontend/public/pm-pdfs/, named exactly `${ticket_no}.pdf`.
+ * This just builds the URL; existence is checked at click-time (see
+ * PmDashboard.tsx) since most tickets won't have one yet.
+ */
+export function pmPdfUrl(ticketNo: string): string {
+    return `/pm-pdfs/${encodeURIComponent(ticketNo)}.pdf`;
 }

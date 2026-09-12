@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { getPmDashboard, getPmFilterOptions } from "../../services/pmApi";
+import { ChevronDown, ChevronRight, FileText, FileX } from "lucide-react";
+import { getPmDashboard, getPmFilterOptions, pmPdfUrl } from "../../services/pmApi";
 import { useAuth } from "../../auth/AuthContext";
 import { PmMonthlyTrendChart } from "../../components/charts/PmMonthlyTrendChart";
+import { PmWeeklyTrendChart } from "../../components/charts/PmWeeklyTrendChart";
+import { PdfViewerModal } from "../../components/PdfViewerModal";
 
 function formatHoursOnly(hours: number | null): string {
     if (hours === null) return "—";
@@ -15,9 +17,9 @@ export default function PmDashboard() {
     const [state, setState] = useState("");
     const [page, setPage] = useState(1);
     const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
+    const [openPdf, setOpenPdf] = useState<{ url: string; title: string } | null>(null);
+    const [pdfMissingTicket, setPdfMissingTicket] = useState<string | null>(null);
 
-    // corob_employee viewing this page needs a ?company= — customers are
-    // always scoped to their own company server-side regardless of this.
     const [employeeCompany, setEmployeeCompany] = useState(myCompany ?? "");
     const isEmployee = roles.includes("corob_employee");
     const activeCompany = isEmployee ? employeeCompany : myCompany ?? undefined;
@@ -42,13 +44,28 @@ export default function PmDashboard() {
         });
     };
 
+    const handleOpenPdf = async (ticketNo: string) => {
+        setPdfMissingTicket(null);
+        const url = pmPdfUrl(ticketNo);
+        try {
+            const res = await fetch(url, { method: "HEAD" });
+            if (res.ok) {
+                setOpenPdf({ url, title: `PM Report — ${ticketNo}` });
+            } else {
+                setPdfMissingTicket(ticketNo);
+            }
+        } catch {
+            setPdfMissingTicket(ticketNo);
+        }
+    };
+
     return (
         <div className="p-6">
             {isEmployee && (
                 <div className="mb-4">
                     <input
                         className="border rounded-lg px-3 py-2 text-sm w-72"
-                        placeholder="Company (e.g. Asian Paints Ltd)"
+                        placeholder="Company (e.g. AKZO Nobel Paints)"
                         value={employeeCompany}
                         onChange={(e) => setEmployeeCompany(e.target.value)}
                     />
@@ -84,7 +101,7 @@ export default function PmDashboard() {
             {activeCompany && !isLoading && data && (
                 <>
                     <div className="grid grid-cols-3 gap-4 mb-6">
-                        <KpiCard label="Total calls" value={data.kpis.totalCalls} />
+                        <KpiCard label="Total PMs" value={data.kpis.totalPms} />
                         <KpiCard label="Closure rate" value={`${data.kpis.closureRatePct}%`} />
                         <KpiCard label="Avg local closure" value={formatHoursOnly(data.kpis.avgLocalClosureHours)} />
                     </div>
@@ -99,7 +116,7 @@ export default function PmDashboard() {
                                     <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
                                         <th className="text-left p-3 border border-gray-200 w-8"></th>
                                         <th className="text-left p-3 border border-gray-200">Region</th>
-                                        <th className="text-left p-3 border border-gray-200">Total Calls</th>
+                                        <th className="text-left p-3 border border-gray-200">Total PMs</th>
                                         <th className="text-left p-3 border border-gray-200">Closed</th>
                                         <th className="text-left p-3 border border-gray-200">Open</th>
                                         <th className="text-left p-3 border border-gray-200">Closure Rate</th>
@@ -115,9 +132,9 @@ export default function PmDashboard() {
                                                         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                                     </td>
                                                     <td className="p-3 border border-gray-200 font-medium">{region.region}</td>
-                                                    <td className="p-3 border border-gray-200">{region.total_calls}</td>
-                                                    <td className="p-3 border border-gray-200">{region.closed_calls}</td>
-                                                    <td className="p-3 border border-gray-200">{region.open_calls}</td>
+                                                    <td className="p-3 border border-gray-200">{region.total_pms}</td>
+                                                    <td className="p-3 border border-gray-200">{region.closed_pms}</td>
+                                                    <td className="p-3 border border-gray-200">{region.open_pms}</td>
                                                     <td className="p-3 border border-gray-200">{region.closure_rate_pct}%</td>
                                                 </tr>
                                                 {isOpen && (
@@ -127,7 +144,7 @@ export default function PmDashboard() {
                                                                 <thead>
                                                                     <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
                                                                         <th className="text-left p-2 pl-10 border border-gray-200">State</th>
-                                                                        <th className="text-left p-2 border border-gray-200">Total Calls</th>
+                                                                        <th className="text-left p-2 border border-gray-200">Total PMs</th>
                                                                         <th className="text-left p-2 border border-gray-200">Closed</th>
                                                                         <th className="text-left p-2 border border-gray-200">Open</th>
                                                                         <th className="text-left p-2 border border-gray-200">Closure Rate</th>
@@ -139,9 +156,9 @@ export default function PmDashboard() {
                                                                             <td className="p-2 pl-10 border border-gray-200">
                                                                                 <span className="text-gray-400 mr-2">#{i + 1}</span>{s.state}
                                                                             </td>
-                                                                            <td className="p-2 border border-gray-200">{s.total_calls}</td>
-                                                                            <td className="p-2 border border-gray-200">{s.closed_calls}</td>
-                                                                            <td className="p-2 border border-gray-200">{s.open_calls}</td>
+                                                                            <td className="p-2 border border-gray-200">{s.total_pms}</td>
+                                                                            <td className="p-2 border border-gray-200">{s.closed_pms}</td>
+                                                                            <td className="p-2 border border-gray-200">{s.open_pms}</td>
                                                                             <td className="p-2 border border-gray-200">{s.closure_rate_pct}%</td>
                                                                         </tr>
                                                                     ))}
@@ -159,54 +176,66 @@ export default function PmDashboard() {
                     )}
 
                     <div className="bg-white rounded-xl border p-4 mb-4">
-                        <h3 className="text-sm font-medium mb-2">Month-on-Month Trend</h3>
-                        <PmMonthlyTrendChart data={data.monthlyTrend} />
+                        <h3 className="text-sm font-medium mb-2">Weekly Analysis</h3>
+                        <p className="text-xs text-gray-500 mb-2">New PMs completed per week</p>
+                        <PmWeeklyTrendChart data={data.weeklyTrend} />
                     </div>
 
                     <div className="bg-white rounded-xl border p-4 mb-4">
-                        <h3 className="text-sm font-medium mb-2">Customer Satisfaction</h3>
-                        <div className="flex gap-3 flex-wrap">
-                            {data.satisfactionBreakdown.map((s) => (
-                                <div key={s.satisfaction_status} className="border rounded-lg px-4 py-2 text-sm" style={{ borderColor: "var(--color-border)" }}>
-                                    <span className="text-gray-500">{s.satisfaction_status || "Not Recorded"}:</span>{" "}
-                                    <span className="font-medium">{s.count}</span>
-                                </div>
-                            ))}
-                        </div>
+                        <h3 className="text-sm font-medium mb-2">Monthly Analysis</h3>
+                        <PmMonthlyTrendChart data={data.monthlyTrend} />
                     </div>
 
                     <div className="bg-white rounded-xl border overflow-hidden mb-4">
                         <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-                            <h3 className="text-sm font-medium">Feedback</h3>
-                            <span className="text-xs text-gray-400">{data.feedbackTable.totalRows} total</span>
+                            <h3 className="text-sm font-medium">PM Detail</h3>
+                            <span className="text-xs text-gray-400">{data.pmDetailTable.totalRows} total</span>
                         </div>
+
+                        {pdfMissingTicket && (
+                            <div className="mx-4 mb-2 flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-3 py-2 text-xs">
+                                <FileX size={14} className="shrink-0" />
+                                No PDF uploaded yet for ticket {pdfMissingTicket}.
+                            </div>
+                        )}
+
                         <table className="w-full text-sm border-collapse">
                             <thead>
                                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                                    <th className="text-left p-3 border border-gray-200">Ticket</th>
+                                    <th className="text-left p-3 border border-gray-200">Ticket No</th>
+                                    <th className="text-left p-3 border border-gray-200">Dealer Code</th>
+                                    <th className="text-left p-3 border border-gray-200">Dealer Name</th>
                                     <th className="text-left p-3 border border-gray-200">Date</th>
-                                    <th className="text-left p-3 border border-gray-200">State</th>
-                                    <th className="text-left p-3 border border-gray-200">Satisfaction</th>
-                                    <th className="text-left p-3 border border-gray-200">Feedback</th>
+                                    <th className="text-left p-3 border border-gray-200">Resolution Remark</th>
+                                    <th className="text-left p-3 border border-gray-200">PDF</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.feedbackTable.rows.map((row) => (
+                                {data.pmDetailTable.rows.map((row) => (
                                     <tr key={row.ticket_no}>
                                         <td className="p-3 border border-gray-200">{row.ticket_no}</td>
+                                        <td className="p-3 border border-gray-200">{row.dealer_code}</td>
+                                        <td className="p-3 border border-gray-200">{row.dealer_name}</td>
                                         <td className="p-3 border border-gray-200">{row.call_date}</td>
-                                        <td className="p-3 border border-gray-200">{row.state}</td>
-                                        <td className="p-3 border border-gray-200">{row.satisfaction_status}</td>
-                                        <td className="p-3 border border-gray-200">{row.feedback}</td>
+                                        <td className="p-3 border border-gray-200">{row.remarks}</td>
+                                        <td className="p-3 border border-gray-200">
+                                            <button
+                                                onClick={() => handleOpenPdf(row.ticket_no)}
+                                                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md border hover:bg-gray-50"
+                                                style={{ borderColor: "var(--color-border)" }}
+                                            >
+                                                <FileText size={12} /> View
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                         <div className="flex items-center justify-between px-4 py-3 text-xs text-gray-500">
                             <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="disabled:opacity-40">Previous</button>
-                            <span>Page {data.feedbackTable.page}</span>
+                            <span>Page {data.pmDetailTable.page}</span>
                             <button
-                                disabled={page * data.feedbackTable.pageSize >= data.feedbackTable.totalRows}
+                                disabled={page * data.pmDetailTable.pageSize >= data.pmDetailTable.totalRows}
                                 onClick={() => setPage((p) => p + 1)}
                                 className="disabled:opacity-40"
                             >
@@ -215,6 +244,10 @@ export default function PmDashboard() {
                         </div>
                     </div>
                 </>
+            )}
+
+            {openPdf && (
+                <PdfViewerModal url={openPdf.url} title={openPdf.title} onClose={() => setOpenPdf(null)} />
             )}
         </div>
     );

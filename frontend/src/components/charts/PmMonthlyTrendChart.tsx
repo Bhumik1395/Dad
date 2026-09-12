@@ -8,7 +8,7 @@ export function PmMonthlyTrendChart({ data }: { data: PmMonthlyTrendRow[] }) {
         grid: { left: 55, right: 55, top: 50, bottom: 40 },
         xAxis: { type: "category", data: data.map((d) => d.year_month), axisLabel: { fontSize: 12 } },
         yAxis: [
-            { type: "value", name: "Calls", nameTextStyle: { fontSize: 12 }, axisLabel: { fontSize: 12 } },
+            { type: "value", name: "PMs", nameTextStyle: { fontSize: 12 }, axisLabel: { fontSize: 12 } },
             {
                 type: "value",
                 name: "Closure Rate %",
@@ -19,10 +19,10 @@ export function PmMonthlyTrendChart({ data }: { data: PmMonthlyTrendRow[] }) {
         ],
         series: [
             {
-                name: "Total Calls",
+                name: "Total PMs",
                 type: "bar",
                 yAxisIndex: 0,
-                data: data.map((d) => d.calls),
+                data: data.map((d) => d.pm_count),
                 label: { show: true, position: "top", fontSize: 12, color: "#333" },
             },
             {
