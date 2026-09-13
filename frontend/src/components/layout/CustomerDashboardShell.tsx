@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { BarChart2, UploadCloud, LogOut } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
+import { deleteAllPmData } from "../../services/pmApi";
+import { ConfirmModal } from "../ConfirmModal";
 
 const navItems = [
     { to: "/customer/pm", label: "PM Overview", icon: BarChart2 },
@@ -8,7 +11,20 @@ const navItems = [
 ];
 
 export default function CustomerDashboardShell() {
-    const { username, company, logout } = useAuth();
+    const { username, company, token, logout } = useAuth();
+    const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+    const [signingOut, setSigningOut] = useState(false);
+
+    const handleSignOut = async () => {
+        setSigningOut(true);
+        try {
+            await deleteAllPmData(token!);
+        } catch {
+            // Best-effort — don't block sign-out if this fails.
+        } finally {
+            logout();
+        }
+    };
 
     return (
         <div className="h-screen flex overflow-hidden" style={{ background: "var(--color-bg)" }}>
@@ -46,8 +62,9 @@ export default function CustomerDashboardShell() {
                         <p className="text-xs text-gray-500 truncate">{username}</p>
                     </div>
                     <button
-                        onClick={() => logout()}
+                        onClick={() => setShowSignOutConfirm(true)}
                         className="w-full flex items-center justify-center gap-2 text-sm border rounded-lg py-2 hover:bg-gray-50"
+                        title="Signs you out and permanently deletes this company's PM data."
                     >
                         <LogOut size={14} /> Sign out
                     </button>
@@ -57,6 +74,17 @@ export default function CustomerDashboardShell() {
             <main className="flex-1 h-screen overflow-y-auto">
                 <Outlet />
             </main>
+
+            {showSignOutConfirm && (
+                <ConfirmModal
+                    title="Sign out and delete all PM data?"
+                    message={`Signing out permanently deletes every uploaded PM record for ${company}. This can't be undone — you'll need to re-upload the Excel file(s) next time you log in.`}
+                    confirmLabel="Sign out & delete"
+                    confirming={signingOut}
+                    onConfirm={handleSignOut}
+                    onCancel={() => setShowSignOutConfirm(false)}
+                />
+            )}
         </div>
     );
 }
