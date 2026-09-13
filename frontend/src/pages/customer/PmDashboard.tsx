@@ -12,6 +12,20 @@ function formatHoursOnly(hours: number | null): string {
     return `${hours} hrs`;
 }
 
+function formatMonthShort(yearMonth: string): string {
+    const [year, month] = yearMonth.split("-");
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthName = monthNames[parseInt(month, 10) - 1] ?? month;
+    return `${monthName}/${year.slice(-2)}`;
+}
+
+function formatMonthFull(yearMonth: string): string {
+    const [year, month] = yearMonth.split("-");
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthName = monthNames[parseInt(month, 10) - 1] ?? month;
+    return `${monthName} ${year}`;
+}
+
 export default function PmDashboard() {
     const { token, roles, company: myCompany } = useAuth();
     const [state, setState] = useState("");
@@ -217,7 +231,10 @@ export default function PmDashboard() {
                     <div className="bg-white rounded-xl border p-4 mb-4">
                         <div className="flex items-center justify-between mb-2">
                             <div>
-                                <h3 className="text-sm font-medium">Weekly Analysis</h3>
+                                <h3 className="text-sm font-medium">
+                                    Weekly Analysis
+                                    <span className="text-gray-400 font-normal"> — {formatMonthFull(weeklyMonth ?? data.weeklyTrendMonth ?? "")}</span>
+                                </h3>
                                 <p className="text-xs text-gray-500">New PMs completed per week</p>
                             </div>
                             <select
@@ -226,7 +243,7 @@ export default function PmDashboard() {
                                 onChange={(e) => setWeeklyMonth(e.target.value || undefined)}
                             >
                                 {data.availableMonths.map((m) => (
-                                    <option key={m} value={m}>{m}</option>
+                                    <option key={m} value={m}>{formatMonthShort(m)}</option>
                                 ))}
                             </select>
                         </div>
