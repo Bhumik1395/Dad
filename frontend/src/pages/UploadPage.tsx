@@ -1,13 +1,11 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { UploadCloud, X, AlertCircle, LogOut } from "lucide-react";
+import { UploadCloud, X, AlertCircle } from "lucide-react";
 import { uploadExcel } from "../services/api";
-import { useAuth } from "../auth/AuthContext";
 
 export default function UploadPage() {
     const navigate = useNavigate();
-    const { logout } = useAuth();
     const [dragOver, setDragOver] = useState(false);
     const [progress, setProgress] = useState(0);
 
@@ -26,21 +24,15 @@ export default function UploadPage() {
     }, [mutation]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center relative" style={{ background: "var(--color-bg)" }}>
-            <button
-                onClick={() => logout()}
-                className="absolute top-4 right-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800"
-            >
-                <LogOut size={14} /> Sign out
-            </button>
-
-            <div className="bg-white rounded-xl border p-10 w-[600px]" style={{ borderColor: "var(--color-border)" }}>
+        <div className="p-6 max-w-3xl mx-auto">
+            <div className="bg-white rounded-xl border p-10" style={{ borderColor: "var(--color-border)" }}>
                 <h1 className="text-2xl font-semibold text-center mb-2">
-                    Upload your service call report to get started
+                    Upload your service call report
                 </h1>
                 <p className="text-center text-gray-500 mb-6">
                     Drag and drop your Excel (.xlsx) file containing the quarterly or
-                    employee analytics data.
+                    employee analytics data. Uploading a new file replaces the current
+                    dashboard data.
                 </p>
 
                 {mutation.isError && (

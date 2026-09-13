@@ -10,6 +10,7 @@ import UploadPage from "./pages/UploadPage";
 
 import { AuthProvider } from "./auth/AuthContext";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import SessionTimeoutGuard from "./auth/SessionTimeoutGuard";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
 import CustomerDashboardShell from "./components/layout/CustomerDashboardShell";
@@ -19,52 +20,46 @@ import PmUploadPage from "./pages/customer/PmUploadPage";
 const queryClient = new QueryClient();
 
 export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+                <SessionTimeoutGuard />
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/unauthorized" element={<Unauthorized />} />
 
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute allowedRoles={["corob_employee"]}>
-                <UploadPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={["corob_employee"]}>
-                <DashboardShell />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="focus" replace />} />
-            <Route path="focus" element={<FocusMode />} />
-            <Route path="quarterly" element={<QuarterlyAnalysis />} />
-            <Route path="employees" element={<EmployeeAnalysis />} />
-            <Route path="utilization" element={<EngineerUtilization />} />
-          </Route>
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute allowedRoles={["corob_employee"]}>
+                                <DashboardShell />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route index element={<Navigate to="focus" replace />} />
+                        <Route path="focus" element={<FocusMode />} />
+                        <Route path="quarterly" element={<QuarterlyAnalysis />} />
+                        <Route path="employees" element={<EmployeeAnalysis />} />
+                        <Route path="utilization" element={<EngineerUtilization />} />
+                        <Route path="upload" element={<UploadPage />} />
+                    </Route>
 
-          <Route
-            path="/customer"
-            element={
-              <ProtectedRoute allowedRoles={["customer", "corob_employee"]}>
-                <CustomerDashboardShell />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="pm" replace />} />
-            <Route path="pm" element={<PmDashboard />} />
-            <Route path="pm/upload" element={<PmUploadPage />} />
-          </Route>
+                    <Route
+                        path="/customer"
+                        element={
+                            <ProtectedRoute allowedRoles={["customer", "corob_employee"]}>
+                                <CustomerDashboardShell />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route index element={<Navigate to="pm" replace />} />
+                        <Route path="pm" element={<PmDashboard />} />
+                        <Route path="pm/upload" element={<PmUploadPage />} />
+                    </Route>
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+            </AuthProvider>
+        </QueryClientProvider>
+    );
 }
