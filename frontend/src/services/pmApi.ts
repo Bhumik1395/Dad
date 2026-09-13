@@ -151,10 +151,7 @@ export async function deleteAllPmData(token: string, company?: string): Promise<
     return handle(res);
 }
 
-/**
- * PDFs aren't generated -- they're static files you commit to
- * frontend/public/pm-pdfs/, named exactly `${ticket_no}.pdf`.
- */
 export function pmPdfUrl(ticketNo: string): string {
-    return `/pm-pdfs/${encodeURIComponent(ticketNo)}.pdf`;
+    const safeName = ticketNo.replace(/\//g, "_");
+    return `/pm-pdfs/${encodeURIComponent(safeName)}.pdf`;
 }
