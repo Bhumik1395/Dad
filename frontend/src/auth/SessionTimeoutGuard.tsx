@@ -43,7 +43,14 @@ export default function SessionTimeoutGuard() {
             }, 1000);
 
             logoutTimerRef.current = window.setTimeout(() => {
-                logout();
+                fetch(`${import.meta.env.VITE_API_BASE_URL}/api/session`, {
+                    method: "DELETE",
+                    credentials: "include",
+                }).catch(() => {
+                    // Best-effort — don't block logout if this fails.
+                }).finally(() => {
+                    logout();
+                });
             }, PROMPT_DURATION_MS);
         }, SESSION_DURATION_MS);
     };
