@@ -73,7 +73,8 @@ export default function PmDashboard() {
         const url = pmPdfUrl(ticketNo);
         try {
             const res = await fetch(url, { method: "HEAD" });
-            if (res.ok) {
+            const contentType = res.headers.get("content-type") ?? "";
+            if (res.ok && contentType.includes("application/pdf")) {
                 setOpenPdf({ url, title: `PM Report — ${ticketNo}` });
             } else {
                 setPdfMissingTicket(ticketNo);
@@ -257,7 +258,7 @@ export default function PmDashboard() {
                         {pdfMissingTicket && (
                             <div className="mx-4 mb-2 flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-3 py-2 text-xs">
                                 <FileX size={14} className="shrink-0" />
-                                No PDF uploaded yet for ticket {pdfMissingTicket}.
+                                PDF NOT FOUND for ticket {pdfMissingTicket}.
                             </div>
                         )}
 
