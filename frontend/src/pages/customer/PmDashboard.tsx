@@ -173,6 +173,7 @@ export default function PmDashboard() {
                                         <th className="text-left p-3 border border-gray-200">Closed</th>
                                         <th className="text-left p-3 border border-gray-200">Open</th>
                                         <th className="text-left p-3 border border-gray-200">Closure Rate</th>
+                                        <th className="text-left p-3 border border-gray-200">Avg Closure Time</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -189,6 +190,7 @@ export default function PmDashboard() {
                                                     <td className="p-3 border border-gray-200">{region.closed_pms}</td>
                                                     <td className="p-3 border border-gray-200">{region.open_pms}</td>
                                                     <td className="p-3 border border-gray-200">{region.closure_rate_pct}%</td>
+                                                    <td className="p-3 border border-gray-200">{formatHoursOnly(region.avg_closure_hours)}</td>
                                                 </tr>
                                                 {isOpen && (
                                                     <tr key={`${region.region}-detail`}>
@@ -201,6 +203,7 @@ export default function PmDashboard() {
                                                                         <th className="text-left p-2 border border-gray-200">Closed</th>
                                                                         <th className="text-left p-2 border border-gray-200">Open</th>
                                                                         <th className="text-left p-2 border border-gray-200">Closure Rate</th>
+                                                                        <th className="text-left p-2 border border-gray-200">Avg Closure Time</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody className="bg-white">
@@ -213,6 +216,7 @@ export default function PmDashboard() {
                                                                             <td className="p-2 border border-gray-200">{s.closed_pms}</td>
                                                                             <td className="p-2 border border-gray-200">{s.open_pms}</td>
                                                                             <td className="p-2 border border-gray-200">{s.closure_rate_pct}%</td>
+                                                                            <td className="p-2 border border-gray-200">{formatHoursOnly(s.avg_closure_hours)}</td>
                                                                         </tr>
                                                                     ))}
                                                                 </tbody>

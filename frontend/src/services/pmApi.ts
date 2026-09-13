@@ -6,6 +6,7 @@ export interface PmStateRow {
     closed_pms: number;
     open_pms: number;
     closure_rate_pct: number;
+    avg_closure_hours: number | null;
 }
 
 export interface PmRegionBreakdownRow {
@@ -14,6 +15,7 @@ export interface PmRegionBreakdownRow {
     closed_pms: number;
     open_pms: number;
     closure_rate_pct: number;
+    avg_closure_hours: number | null;
     states: PmStateRow[];
 }
 

@@ -33,10 +33,15 @@ def compute_pm_dashboard(
             avg_upcountry_closure = round(upcountry_rows.mean(), 1)
 
     # --- Region / state breakdown ---
-    state_grouped = filtered.groupby("state").agg(
-        total_pms=("ticket_no", "count"),
-        closed_pms=("is_closed", "sum"),
-    ).reset_index()
+    has_closure_hours = "closure_hours" in filtered.columns
+
+    state_agg = {"total_pms": ("ticket_no", "count"), "closed_pms": ("is_closed", "sum")}
+    if has_closure_hours:
+        state_agg["avg_closure_hours"] = ("closure_hours", "mean")
+
+    state_grouped = filtered.groupby("state").agg(**state_agg).reset_index()
+    if has_closure_hours:
+        state_grouped["avg_closure_hours"] = state_grouped["avg_closure_hours"].round(1)
     state_grouped = _build_breakdown(state_grouped)
 
     state_region_map = filtered.groupby("state")["region"].agg(
@@ -44,28 +49,44 @@ def compute_pm_dashboard(
     ).reset_index()
     state_grouped = state_grouped.merge(state_region_map, on="state", how="left")
 
-    region_grouped = filtered.groupby("region").agg(
-        total_pms=("ticket_no", "count"),
-        closed_pms=("is_closed", "sum"),
-    ).reset_index()
+    region_agg = {"total_pms": ("ticket_no", "count"), "closed_pms": ("is_closed", "sum")}
+    if has_closure_hours:
+        region_agg["avg_closure_hours"] = ("closure_hours", "mean")
+
+    region_grouped = filtered.groupby("region").agg(**region_agg).reset_index()
+    if has_closure_hours:
+        region_grouped["avg_closure_hours"] = region_grouped["avg_closure_hours"].round(1)
     region_grouped = _build_breakdown(region_grouped)
     region_grouped = region_grouped.sort_values("total_pms", ascending=False)
+
+    def _closure_hours_or_none(row) -> float | None:
+        val = row.get("avg_closure_hours")
+        return None if val is None or pd.isna(val) else float(val)
 
     region_breakdown = []
     for _, region_row in region_grouped.iterrows():
         region_name = region_row["region"]
-        states_in_region = (
-            state_grouped[state_grouped["region"] == region_name]
-            .sort_values("total_pms", ascending=False)
-            [["state", "total_pms", "closed_pms", "open_pms", "closure_rate_pct"]]
-            .to_dict("records")
+        states_in_region_df = state_grouped[state_grouped["region"] == region_name].sort_values(
+            "total_pms", ascending=False
         )
+        states_in_region = [
+            {
+                "state": r["state"],
+                "total_pms": int(r["total_pms"]),
+                "closed_pms": int(r["closed_pms"]),
+                "open_pms": int(r["open_pms"]),
+                "closure_rate_pct": float(r["closure_rate_pct"]),
+                "avg_closure_hours": _closure_hours_or_none(r),
+            }
+            for _, r in states_in_region_df.iterrows()
+        ]
         region_breakdown.append({
             "region": region_name,
             "total_pms": int(region_row["total_pms"]),
             "closed_pms": int(region_row["closed_pms"]),
             "open_pms": int(region_row["open_pms"]),
             "closure_rate_pct": float(region_row["closure_rate_pct"]),
+            "avg_closure_hours": _closure_hours_or_none(region_row),
             "states": states_in_region,
         })
 
