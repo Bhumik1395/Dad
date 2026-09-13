@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, FileText, FileX, Search } from "lucide-react";
 import { getPmDashboard, getPmFilterOptions, pmPdfUrl } from "../../services/pmApi";
 import { useAuth } from "../../auth/AuthContext";
@@ -42,7 +42,7 @@ export default function PmDashboard() {
         enabled: !!token && !!activeCompany,
     });
 
-    const { data, isLoading, isError, error } = useQuery({
+    const { data, isLoading, isFetching, isError, error } = useQuery({
         queryKey: ["pmDashboard", activeCompany, state, weeklyMonth, dealerSearch, page],
         queryFn: () => getPmDashboard(token!, {
             company: activeCompany,
@@ -52,6 +52,7 @@ export default function PmDashboard() {
             page,
         }),
         enabled: !!token && !!activeCompany,
+        placeholderData: keepPreviousData, // keep showing old data while new filters/page load in the background
     });
 
     const toggleRegion = (region: string) => {
@@ -97,7 +98,7 @@ export default function PmDashboard() {
             )}
 
             {activeCompany && (
-                <div className="grid grid-cols-4 gap-3 mb-6">
+                <div className="grid grid-cols-4 gap-3 mb-6 items-center">
                     <select
                         className="border rounded-lg px-3 py-2 text-sm"
                         value={state}
@@ -106,6 +107,9 @@ export default function PmDashboard() {
                         <option value="">All States</option>
                         {filterOptions?.states.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
+                    {isFetching && !isLoading && (
+                        <span className="text-xs text-gray-400">Updating…</span>
+                    )}
                 </div>
             )}
 

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Scan, BarChart2, Users, RotateCcw, FileText, Gauge } from "lucide-react";
+import { Scan, BarChart2, Users, RotateCcw, FileText, Gauge, LogOut } from "lucide-react";
 import { downloadPdfReport } from "../../services/api";
 import { FocusFilterProvider, useFocusFilter } from "../../context/FocusFilterContext";
+import { useAuth } from "../../auth/AuthContext";
 
 const navItems = [
     { to: "/dashboard/focus", label: "Focus Mode", icon: Scan },
@@ -14,6 +15,7 @@ const navItems = [
 function DashboardShellInner() {
     const [generating, setGenerating] = useState(false);
     const { customer } = useFocusFilter();
+    const { logout } = useAuth();
 
     const handleGeneratePdf = async () => {
         setGenerating(true);
@@ -75,8 +77,15 @@ function DashboardShellInner() {
                             }).then(() => (window.location.href = "/"))
                         }
                         className="w-full flex items-center justify-center gap-2 text-sm border rounded-lg py-2 hover:bg-gray-50"
+                        title="Clears the uploaded Service Call data so you can upload a fresh file. Does not sign you out."
                     >
                         <RotateCcw size={14} /> Reset Session
+                    </button>
+                    <button
+                        onClick={() => logout()}
+                        className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg py-2"
+                    >
+                        <LogOut size={14} /> Sign out
                     </button>
                 </div>
             </aside>
