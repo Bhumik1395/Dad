@@ -140,11 +140,20 @@ export async function getPmFilterOptions(token: string, company?: string): Promi
     return handle<PmFilterOptions>(res);
 }
 
+/** Permanently deletes all stored PM data for a company. Irreversible. */
+export async function deleteAllPmData(token: string, company?: string): Promise<{ company: string; deleted: boolean }> {
+    const params = new URLSearchParams();
+    if (company) params.set("company", company);
+    const res = await fetch(`${API_BASE}/api/pm/data?${params}`, {
+        method: "DELETE",
+        headers: authHeaders(token),
+    });
+    return handle(res);
+}
+
 /**
  * PDFs aren't generated -- they're static files you commit to
  * frontend/public/pm-pdfs/, named exactly `${ticket_no}.pdf`.
- * This just builds the URL; existence is checked at click-time (see
- * PmDashboard.tsx) since most tickets won't have one yet.
  */
 export function pmPdfUrl(ticketNo: string): string {
     return `/pm-pdfs/${encodeURIComponent(ticketNo)}.pdf`;
