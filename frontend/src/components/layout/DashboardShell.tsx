@@ -29,6 +29,21 @@ function DashboardShellInner() {
         }
     };
 
+    const handleSignOut = async () => {
+        try {
+            // Sign out used to leave the old Service Call session cookie/cache
+            // intact (they're on separate systems), so re-logging in within
+            // the hour showed stale data. Clear it explicitly here too.
+            await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/session`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+        } catch {
+            // Best-effort — don't block sign-out if this fails.
+        }
+        logout();
+    };
+
     return (
         <div className="h-screen flex overflow-hidden" style={{ background: "var(--color-bg)" }}>
             <aside className="w-64 h-screen shrink-0 bg-white border-r flex flex-col justify-between" style={{ borderColor: "var(--color-border)" }}>
@@ -71,7 +86,7 @@ function DashboardShellInner() {
                         <FileText size={14} /> {generating ? "Generating…" : "Generate PDF Report"}
                     </button>
                     <button
-                        onClick={() => logout()}
+                        onClick={handleSignOut}
                         className="w-full flex items-center justify-center gap-2 text-sm border rounded-lg py-2 hover:bg-gray-50"
                     >
                         <LogOut size={14} /> Sign out
