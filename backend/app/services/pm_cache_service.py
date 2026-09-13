@@ -32,3 +32,10 @@ def save_pm_data(company: str, df: pd.DataFrame) -> int:
     combined.to_pickle(buf, compression="gzip")
     r.set(_company_key(company), buf.getvalue(), ex=PM_DATA_TTL_SECONDS)
     return len(combined)
+
+
+def delete_pm_data(company: str) -> bool:
+    """Wipes all stored PM data for a company. Returns True if there was
+    anything to delete, False if it was already empty."""
+    deleted_count = r.delete(_company_key(company))
+    return deleted_count > 0

@@ -4,7 +4,8 @@ import pandas as pd
 from app.core.supabase_auth import CurrentUser, require_roles
 from app.services.pm_validation import validate_pm_excel, ValidationError
 from app.services.pm_excel_service import process_pm_dataframe
-from app.services.pm_cache_service import save_pm_data
+from app.services.pm_cache_service import save_pm_data, delete_pm_data
+from app.services.pm_common import resolve_company
 
 router = APIRouter()
 
@@ -65,3 +66,15 @@ def upload_pm_data(
         "files": per_file_results,
         "companies": [{"company": c, "total_rows_stored": n} for c, n in saved.items()],
     }
+
+
+@router.delete("/api/pm/data")
+def end_pm_session(
+    company: str | None = None,
+    user: CurrentUser = Depends(require_roles("customer", "corob_employee")),
+):
+    """Permanently deletes all stored PM data for a company. Customers can
+    only ever target their own company, regardless of the query string."""
+    resolved_company = resolve_company(user, company)
+    had_data = delete_pm_data(resolved_company)
+    return {"company": resolved_company, "deleted": had_data}
