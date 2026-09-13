@@ -194,7 +194,7 @@ export default function PmDashboard() {
                                                 </tr>
                                                 {isOpen && (
                                                     <tr key={`${region.region}-detail`}>
-                                                        <td colSpan={6} className="border border-gray-200 p-0 bg-gray-50">
+                                                        <td colSpan={7} className="border border-gray-200 p-0 bg-gray-50">
                                                             <table className="w-full text-sm border-collapse">
                                                                 <thead>
                                                                     <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
