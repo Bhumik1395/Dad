@@ -120,7 +120,7 @@ export default function PmDashboard() {
                 </p>
             )}
 
-            {activeCompany && !isLoading && data && (
+            {activeCompany && !isLoading && !isError && data && (
                 <>
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <KpiCard label="Total PMs" value={data.kpis.totalPms} />
