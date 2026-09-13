@@ -52,8 +52,13 @@ export default function PmDashboard() {
             page,
         }),
         enabled: !!token && !!activeCompany,
-        placeholderData: keepPreviousData, // keep showing old data while new filters/page load in the background
+        placeholderData: keepPreviousData,
     });
+
+    const [jumpValue, setJumpValue] = useState(String(page));
+    useEffect(() => {
+        setJumpValue(String(page));
+    }, [page]);
 
     const toggleRegion = (region: string) => {
         setExpandedRegions((prev) => {
@@ -75,6 +80,17 @@ export default function PmDashboard() {
             }
         } catch {
             setPdfMissingTicket(ticketNo);
+        }
+    };
+
+    const totalPages = data ? Math.max(1, Math.ceil(data.pmDetailTable.totalRows / data.pmDetailTable.pageSize)) : 1;
+
+    const handleJump = () => {
+        const n = parseInt(jumpValue, 10);
+        if (!isNaN(n) && n >= 1 && n <= totalPages) {
+            setPage(n);
+        } else {
+            setJumpValue(String(page));
         }
     };
 
@@ -235,7 +251,6 @@ export default function PmDashboard() {
                                         style={{ borderColor: "var(--color-border)" }}
                                     />
                                 </div>
-                                <span className="text-xs text-gray-400 shrink-0">{data.pmDetailTable.totalRows} total</span>
                             </div>
                         </div>
 
@@ -278,16 +293,36 @@ export default function PmDashboard() {
                                 ))}
                             </tbody>
                         </table>
-                        <div className="flex items-center justify-between px-4 py-3 text-xs text-gray-500">
-                            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="disabled:opacity-40">Previous</button>
-                            <span>Page {data.pmDetailTable.page}</span>
-                            <button
-                                disabled={page * data.pmDetailTable.pageSize >= data.pmDetailTable.totalRows}
-                                onClick={() => setPage((p) => p + 1)}
-                                className="disabled:opacity-40"
-                            >
-                                Next
-                            </button>
+                        <div className="flex items-center justify-between p-3 border-t text-sm text-gray-500">
+                            <span>{data.pmDetailTable.totalRows.toLocaleString()} total records</span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    disabled={page <= 1}
+                                    onClick={() => setPage((p) => p - 1)}
+                                    className="px-3 py-1 border rounded-md disabled:opacity-40"
+                                >
+                                    Prev
+                                </button>
+                                <span>Page</span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={totalPages}
+                                    value={jumpValue}
+                                    onChange={(e) => setJumpValue(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleJump()}
+                                    onBlur={handleJump}
+                                    className="w-14 border rounded-md px-2 py-1 text-center"
+                                />
+                                <span>of {totalPages}</span>
+                                <button
+                                    disabled={page >= totalPages}
+                                    onClick={() => setPage((p) => p + 1)}
+                                    className="px-3 py-1 border rounded-md disabled:opacity-40"
+                                >
+                                    Next
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </>
