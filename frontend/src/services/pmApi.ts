@@ -5,7 +5,6 @@ export interface PmStateRow {
     total_pms: number;
     closed_pms: number;
     open_pms: number;
-    closure_rate_pct: number;
     avg_closure_hours: number | null;
 }
 
@@ -14,7 +13,6 @@ export interface PmRegionBreakdownRow {
     total_pms: number;
     closed_pms: number;
     open_pms: number;
-    closure_rate_pct: number;
     avg_closure_hours: number | null;
     states: PmStateRow[];
 }
@@ -22,7 +20,6 @@ export interface PmRegionBreakdownRow {
 export interface PmMonthlyTrendRow {
     year_month: string;
     pm_count: number;
-    closure_rate_pct: number;
 }
 
 export interface PmWeeklyTrendRow {
@@ -41,7 +38,8 @@ export interface PmDetailRow {
 export interface PmDashboardResponse {
     kpis: {
         totalPms: number;
-        closureRatePct: number;
+        pmDone: number;
+        pmNotDone: number;
         avgLocalClosureHours: number | null;
         avgUpcountryClosureHours: number | null;
     };
@@ -119,6 +117,7 @@ export async function getPmDashboard(
         state?: string;
         month?: string;
         dealerCode?: string;
+        detailState?: string;
         page?: number;
         pageSize?: number;
     } = {}
@@ -128,6 +127,7 @@ export async function getPmDashboard(
     if (opts.state) params.set("state", opts.state);
     if (opts.month) params.set("month", opts.month);
     if (opts.dealerCode) params.set("dealer_code", opts.dealerCode);
+    if (opts.detailState) params.set("detail_state", opts.detailState);
     params.set("page", String(opts.page ?? 1));
     params.set("page_size", String(opts.pageSize ?? 50));
 
