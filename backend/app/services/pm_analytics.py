@@ -17,47 +17,24 @@ def compute_pm_dashboard(
     total_pms = len(filtered)
     closed_pms = int(filtered["is_closed"].sum())
 
-    avg_local_closure = None
-    avg_upcountry_closure = None
-    has_closure_hours = "closure_hours" in filtered.columns
-    if has_closure_hours and "loc_up_rem" in filtered.columns:
-        local_rows = filtered[filtered["loc_up_rem"] == "Local"]["closure_hours"]
-        upcountry_rows = filtered[filtered["loc_up_rem"].isin(["Upcountry", "Remote"])]["closure_hours"]
-        if local_rows.notna().any():
-            avg_local_closure = round(local_rows.mean(), 1)
-        if upcountry_rows.notna().any():
-            avg_upcountry_closure = round(upcountry_rows.mean(), 1)
-
     # --- Region / state breakdown ---
-    state_agg = {"total_pms": ("ticket_no", "count"), "closed_pms": ("is_closed", "sum")}
-    if has_closure_hours:
-        state_agg["avg_closure_hours"] = ("closure_hours", "mean")
-
-    state_grouped = filtered.groupby("state").agg(**state_agg).reset_index()
+    state_grouped = filtered.groupby("state").agg(
+        total_pms=("ticket_no", "count"),
+        closed_pms=("is_closed", "sum"),
+    ).reset_index()
     state_grouped["open_pms"] = state_grouped["total_pms"] - state_grouped["closed_pms"]
-    if has_closure_hours:
-        state_grouped["avg_closure_hours"] = state_grouped["avg_closure_hours"].round(1)
 
     state_region_map = filtered.groupby("state")["region"].agg(
         lambda s: s.mode().iloc[0] if not s.mode().empty else s.iloc[0]
     ).reset_index()
     state_grouped = state_grouped.merge(state_region_map, on="state", how="left")
 
-    region_agg = {"total_pms": ("ticket_no", "count"), "closed_pms": ("is_closed", "sum")}
-    if has_closure_hours:
-        region_agg["avg_closure_hours"] = ("closure_hours", "mean")
-
-    region_grouped = filtered.groupby("region").agg(**region_agg).reset_index()
+    region_grouped = filtered.groupby("region").agg(
+        total_pms=("ticket_no", "count"),
+        closed_pms=("is_closed", "sum"),
+    ).reset_index()
     region_grouped["open_pms"] = region_grouped["total_pms"] - region_grouped["closed_pms"]
-    if has_closure_hours:
-        region_grouped["avg_closure_hours"] = region_grouped["avg_closure_hours"].round(1)
     region_grouped = region_grouped.sort_values("total_pms", ascending=False)
-
-    def _closure_hours_or_none(row) -> float | None:
-        if not has_closure_hours:
-            return None
-        val = row.get("avg_closure_hours")
-        return None if val is None or pd.isna(val) else float(val)
 
     region_breakdown = []
     for _, region_row in region_grouped.iterrows():
@@ -71,7 +48,6 @@ def compute_pm_dashboard(
                 "total_pms": int(r["total_pms"]),
                 "closed_pms": int(r["closed_pms"]),
                 "open_pms": int(r["open_pms"]),
-                "avg_closure_hours": _closure_hours_or_none(r),
             }
             for _, r in states_in_region_df.iterrows()
         ]
@@ -80,7 +56,6 @@ def compute_pm_dashboard(
             "total_pms": int(region_row["total_pms"]),
             "closed_pms": int(region_row["closed_pms"]),
             "open_pms": int(region_row["open_pms"]),
-            "avg_closure_hours": _closure_hours_or_none(region_row),
             "states": states_in_region,
         })
 
@@ -92,8 +67,7 @@ def compute_pm_dashboard(
     monthly_trend_list = monthly_trend.to_dict("records")
 
     # --- Weekly analysis: how many new PMs were done each ISO week,
-    # scoped to one calendar month so the chart doesn't dump every week
-    # of every month onto one axis at once ---
+    # scoped to one calendar month ---
     available_months = sorted(monthly["year_month"].unique().tolist())
     weekly_month = month or (available_months[-1] if available_months else None)
 
@@ -109,8 +83,7 @@ def compute_pm_dashboard(
     weekly_trend_list = weekly_trend.to_dict("records")
 
     # --- PM Detail table. Independent of the top-level `state` filter --
-    # it starts from the full company dataset (`df`), not `filtered`, and
-    # applies its own `detail_state` + dealer_code search instead. ---
+    # it starts from the full company dataset (`df`), not `filtered`. ---
     detail_source = df
     if detail_state:
         detail_source = detail_source[detail_source["state"] == detail_state]
@@ -137,8 +110,6 @@ def compute_pm_dashboard(
             "totalPms": total_pms,
             "pmDone": closed_pms,
             "pmNotDone": total_pms - closed_pms,
-            "avgLocalClosureHours": avg_local_closure,
-            "avgUpcountryClosureHours": avg_upcountry_closure,
         },
         "regionBreakdown": region_breakdown,
         "monthlyTrend": monthly_trend_list,

@@ -7,11 +7,6 @@ import { PmMonthlyTrendChart } from "../../components/charts/PmMonthlyTrendChart
 import { PmWeeklyTrendChart } from "../../components/charts/PmWeeklyTrendChart";
 import { PdfViewerModal } from "../../components/PdfViewerModal";
 
-function formatHoursOnly(hours: number | null): string {
-    if (hours === null) return "—";
-    return `${hours} hrs`;
-}
-
 function formatMonthShort(yearMonth: string): string {
     const [year, month] = yearMonth.split("-");
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -46,7 +41,6 @@ export default function PmDashboard() {
         return () => clearTimeout(t);
     }, [dealerSearchInput]);
 
-    // Separate state filter, scoped only to the PM Detail table
     const [detailState, setDetailState] = useState("");
 
     const [employeeCompany, setEmployeeCompany] = useState(myCompany ?? "");
@@ -157,11 +151,10 @@ export default function PmDashboard() {
 
             {activeCompany && !isLoading && !isError && data && (
                 <>
-                    <div className="grid grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-3 gap-4 mb-6">
                         <KpiCard label="Total PMs" value={data.kpis.totalPms} />
                         <KpiCard label="PM Done" value={data.kpis.pmDone} />
                         <KpiCard label="PM Not Done" value={data.kpis.pmNotDone} />
-                        <KpiCard label="Avg local closure" value={formatHoursOnly(data.kpis.avgLocalClosureHours)} />
                     </div>
 
                     {!state && data.regionBreakdown.length > 0 && (
@@ -177,7 +170,6 @@ export default function PmDashboard() {
                                         <th className="text-left p-3 border border-gray-200">Total PMs</th>
                                         <th className="text-left p-3 border border-gray-200">Closed</th>
                                         <th className="text-left p-3 border border-gray-200">Open</th>
-                                        <th className="text-left p-3 border border-gray-200">Avg Closure Time</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -193,11 +185,10 @@ export default function PmDashboard() {
                                                     <td className="p-3 border border-gray-200">{region.total_pms}</td>
                                                     <td className="p-3 border border-gray-200">{region.closed_pms}</td>
                                                     <td className="p-3 border border-gray-200">{region.open_pms}</td>
-                                                    <td className="p-3 border border-gray-200">{formatHoursOnly(region.avg_closure_hours)}</td>
                                                 </tr>
                                                 {isOpen && (
                                                     <tr key={`${region.region}-detail`}>
-                                                        <td colSpan={6} className="border border-gray-200 p-0 bg-gray-50">
+                                                        <td colSpan={5} className="border border-gray-200 p-0 bg-gray-50">
                                                             <table className="w-full text-sm border-collapse">
                                                                 <thead>
                                                                     <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
@@ -205,7 +196,6 @@ export default function PmDashboard() {
                                                                         <th className="text-left p-2 border border-gray-200">Total PMs</th>
                                                                         <th className="text-left p-2 border border-gray-200">Closed</th>
                                                                         <th className="text-left p-2 border border-gray-200">Open</th>
-                                                                        <th className="text-left p-2 border border-gray-200">Avg Closure Time</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody className="bg-white">
@@ -217,7 +207,6 @@ export default function PmDashboard() {
                                                                             <td className="p-2 border border-gray-200">{s.total_pms}</td>
                                                                             <td className="p-2 border border-gray-200">{s.closed_pms}</td>
                                                                             <td className="p-2 border border-gray-200">{s.open_pms}</td>
-                                                                            <td className="p-2 border border-gray-200">{formatHoursOnly(s.avg_closure_hours)}</td>
                                                                         </tr>
                                                                     ))}
                                                                 </tbody>

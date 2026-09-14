@@ -5,7 +5,6 @@ export interface PmStateRow {
     total_pms: number;
     closed_pms: number;
     open_pms: number;
-    avg_closure_hours: number | null;
 }
 
 export interface PmRegionBreakdownRow {
@@ -13,7 +12,6 @@ export interface PmRegionBreakdownRow {
     total_pms: number;
     closed_pms: number;
     open_pms: number;
-    avg_closure_hours: number | null;
     states: PmStateRow[];
 }
 
@@ -40,9 +38,8 @@ export interface PmDashboardResponse {
         totalPms: number;
         pmDone: number;
         pmNotDone: number;
-        avgLocalClosureHours: number | null;
-        avgUpcountryClosureHours: number | null;
     };
+
     regionBreakdown: PmRegionBreakdownRow[];
     monthlyTrend: PmMonthlyTrendRow[];
     weeklyTrend: PmWeeklyTrendRow[];
