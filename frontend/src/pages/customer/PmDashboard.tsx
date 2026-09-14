@@ -154,7 +154,7 @@ export default function PmDashboard() {
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <KpiCard label="Total PMs" value={data.kpis.totalPms} />
                         <KpiCard label="PM Done" value={data.kpis.pmDone} />
-                        <KpiCard label="PM Not Done" value={data.kpis.pmNotDone} />
+                        <KpiCard label="Dispute" value={data.kpis.pmNotDone} />
                     </div>
 
                     {!state && data.regionBreakdown.length > 0 && (
