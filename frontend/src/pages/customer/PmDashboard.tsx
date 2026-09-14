@@ -46,6 +46,9 @@ export default function PmDashboard() {
         return () => clearTimeout(t);
     }, [dealerSearchInput]);
 
+    // Separate state filter, scoped only to the PM Detail table
+    const [detailState, setDetailState] = useState("");
+
     const [employeeCompany, setEmployeeCompany] = useState(myCompany ?? "");
     const isEmployee = roles.includes("corob_employee");
     const activeCompany = isEmployee ? employeeCompany : myCompany ?? undefined;
@@ -57,12 +60,13 @@ export default function PmDashboard() {
     });
 
     const { data, isLoading, isFetching, isError, error } = useQuery({
-        queryKey: ["pmDashboard", activeCompany, state, weeklyMonth, dealerSearch, page],
+        queryKey: ["pmDashboard", activeCompany, state, weeklyMonth, dealerSearch, detailState, page],
         queryFn: () => getPmDashboard(token!, {
             company: activeCompany,
             state: state || undefined,
             month: weeklyMonth,
             dealerCode: dealerSearch || undefined,
+            detailState: detailState || undefined,
             page,
         }),
         enabled: !!token && !!activeCompany,
@@ -153,9 +157,10 @@ export default function PmDashboard() {
 
             {activeCompany && !isLoading && !isError && data && (
                 <>
-                    <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-4 gap-4 mb-6">
                         <KpiCard label="Total PMs" value={data.kpis.totalPms} />
-                        <KpiCard label="Closure rate" value={`${data.kpis.closureRatePct}%`} />
+                        <KpiCard label="PM Done" value={data.kpis.pmDone} />
+                        <KpiCard label="PM Not Done" value={data.kpis.pmNotDone} />
                         <KpiCard label="Avg local closure" value={formatHoursOnly(data.kpis.avgLocalClosureHours)} />
                     </div>
 
@@ -172,7 +177,6 @@ export default function PmDashboard() {
                                         <th className="text-left p-3 border border-gray-200">Total PMs</th>
                                         <th className="text-left p-3 border border-gray-200">Closed</th>
                                         <th className="text-left p-3 border border-gray-200">Open</th>
-                                        <th className="text-left p-3 border border-gray-200">Closure Rate</th>
                                         <th className="text-left p-3 border border-gray-200">Avg Closure Time</th>
                                     </tr>
                                 </thead>
@@ -189,12 +193,11 @@ export default function PmDashboard() {
                                                     <td className="p-3 border border-gray-200">{region.total_pms}</td>
                                                     <td className="p-3 border border-gray-200">{region.closed_pms}</td>
                                                     <td className="p-3 border border-gray-200">{region.open_pms}</td>
-                                                    <td className="p-3 border border-gray-200">{region.closure_rate_pct}%</td>
                                                     <td className="p-3 border border-gray-200">{formatHoursOnly(region.avg_closure_hours)}</td>
                                                 </tr>
                                                 {isOpen && (
                                                     <tr key={`${region.region}-detail`}>
-                                                        <td colSpan={7} className="border border-gray-200 p-0 bg-gray-50">
+                                                        <td colSpan={6} className="border border-gray-200 p-0 bg-gray-50">
                                                             <table className="w-full text-sm border-collapse">
                                                                 <thead>
                                                                     <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
@@ -202,7 +205,6 @@ export default function PmDashboard() {
                                                                         <th className="text-left p-2 border border-gray-200">Total PMs</th>
                                                                         <th className="text-left p-2 border border-gray-200">Closed</th>
                                                                         <th className="text-left p-2 border border-gray-200">Open</th>
-                                                                        <th className="text-left p-2 border border-gray-200">Closure Rate</th>
                                                                         <th className="text-left p-2 border border-gray-200">Avg Closure Time</th>
                                                                     </tr>
                                                                 </thead>
@@ -215,7 +217,6 @@ export default function PmDashboard() {
                                                                             <td className="p-2 border border-gray-200">{s.total_pms}</td>
                                                                             <td className="p-2 border border-gray-200">{s.closed_pms}</td>
                                                                             <td className="p-2 border border-gray-200">{s.open_pms}</td>
-                                                                            <td className="p-2 border border-gray-200">{s.closure_rate_pct}%</td>
                                                                             <td className="p-2 border border-gray-200">{formatHoursOnly(s.avg_closure_hours)}</td>
                                                                         </tr>
                                                                     ))}
@@ -263,6 +264,14 @@ export default function PmDashboard() {
                         <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-3">
                             <h3 className="text-sm font-medium shrink-0">PM Detail</h3>
                             <div className="flex items-center gap-3">
+                                <select
+                                    className="border rounded-lg px-3 py-1.5 text-sm"
+                                    value={detailState}
+                                    onChange={(e) => { setPage(1); setDetailState(e.target.value); }}
+                                >
+                                    <option value="">All States</option>
+                                    {filterOptions?.states.map((s) => <option key={s} value={s}>{s}</option>)}
+                                </select>
                                 <div className="relative">
                                     <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input
