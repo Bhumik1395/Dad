@@ -80,6 +80,7 @@ export function RepeatMachinesTable({
                                                         <th className="text-left p-2 border border-gray-200 w-28">State</th>
                                                         <th className="text-left p-2 border border-gray-200 w-24">Status</th>
                                                         <th className="text-left p-2 border border-gray-200 w-24">Visit Type</th>
+                                                        <th className="text-left p-2 border border-gray-200 w-28">Service Type</th>
                                                         <th className="text-left p-2 border border-gray-200 w-20">Dealer Code</th>
                                                         <th className="text-left p-2 border border-gray-200 w-40">Dealer Name</th>
                                                         <th className="text-left p-2 border border-gray-200 w-24">City</th>
@@ -94,6 +95,7 @@ export function RepeatMachinesTable({
                                                             <td className="p-2 border border-gray-200">{c.state}</td>
                                                             <td className="p-2 border border-gray-200 whitespace-nowrap">{c.status}</td>
                                                             <td className="p-2 border border-gray-200 whitespace-nowrap">{c.visit_type}</td>
+                                                            <td className="p-2 border border-gray-200 whitespace-nowrap">{c.service_type}</td>
                                                             <td className="p-2 border border-gray-200 whitespace-nowrap">{c.dealer_code}</td>
                                                             <td className="p-2 border border-gray-200">{c.dealer_name}</td>
                                                             <td className="p-2 border border-gray-200">{c.city}</td>
