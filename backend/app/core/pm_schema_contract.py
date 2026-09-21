@@ -14,10 +14,6 @@ PM_SCHEMA_CONTRACT = {
     "max_rows": 200_000,
 }
 
-# NOTE: "Master Customer" (e.g. "Asian Paints Ltd") is the tenancy field --
-# it's what a Customer-role Keycloak user's `company` attribute is matched
-# against. "Customer Name" in the raw sheet is the outlet/dealer-level name
-# and is kept separately, not used for access control.
 PM_COLUMN_MAP = {
     "Ticket No": "ticket_no",
     "Master Customer": "company",

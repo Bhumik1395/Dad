@@ -22,6 +22,7 @@ COLUMN_MAP = {
     "Machine No.": "machine_no",
     "Call Date": "call_date",
     "Visit Verification": "visit_type",
+    "Service Type": "service_type",
     "Eng Code": "eng_code",
     "Owned By": "employee_name",
     "Call Attended date": "call_attended_date",

@@ -21,12 +21,20 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = df[col].astype(str).str.strip()
             df[col] = df[col].replace({"nan": "", "None": ""})
 
+
     if "call_attended_date" in df.columns:
         df["call_attended_date"] = pd.to_datetime(df["call_attended_date"], errors="coerce")
         df["visit_type"] = df["call_attended_date"].notna().map({True: "Physical", False: "Online"})
     else:
 
         df["visit_type"] = "Unknown"
+
+
+    if "service_type" in df.columns:
+        df["service_type"] = df["service_type"].astype(str).str.strip().str.title()
+        df["service_type"] = df["service_type"].replace({"Nan": "", "None": ""})
+    else:
+        df["service_type"] = ""
 
     df["under_norm"] = df["status"] == "Undernorm"
 
