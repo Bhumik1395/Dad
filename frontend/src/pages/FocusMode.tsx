@@ -52,7 +52,7 @@ export default function FocusMode() {
 
     return (
         <div className="p-6">
-            <div className="grid grid-cols-4 gap-3 mb-2">
+            <div className="grid grid-cols-5 gap-3 mb-2">
                 <select className="border rounded-lg px-3 py-2 text-sm" onChange={(e) => updateFilter("customer", e.target.value)}>
                     <option value="">All Customers</option>
                     {filterOptions?.customers.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -68,6 +68,11 @@ export default function FocusMode() {
                 <select className="border rounded-lg px-3 py-2 text-sm" onChange={(e) => updateFilter("status", e.target.value)}>
                     <option value="">All Statuses</option>
                     {filterOptions?.statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <select className="border rounded-lg px-3 py-2 text-sm" onChange={(e) => updateFilter("service_type", e.target.value)}>
+                    <option value="">All Service Types</option>
+                    <option value="Service">Service</option>
+                    <option value="Other">Other</option>
                 </select>
             </div>
             <div className="h-5 mb-4">

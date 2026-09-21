@@ -15,7 +15,7 @@ def _build_breakdown(grouped: pd.DataFrame, filtered: pd.DataFrame, group_col: s
 
 def compute_focus(
     df: pd.DataFrame,
-    customer=None, state=None, machine=None, status=None,
+    customer=None, state=None, machine=None, status=None, service_type=None,
     page: int = 1, page_size: int = 50,
 ) -> dict:
     filtered = df
@@ -23,6 +23,13 @@ def compute_focus(
     if state: filtered = filtered[filtered["state"] == state]
     if machine: filtered = filtered[filtered["machine_no"] == machine]
     if status: filtered = filtered[filtered["status"] == status]
+
+    # Gdata rows are routine G-data updates, not real service visits — drop
+    # them from this view entirely (not just from repeat-call counting).
+    if "service_type" in filtered.columns:
+        filtered = filtered[filtered["service_type"] != "Gdata"]
+        if service_type:
+            filtered = filtered[filtered["service_type"] == service_type]
 
     total_calls = len(filtered)
     under_norm_calls = int(filtered["under_norm"].sum())
@@ -128,7 +135,7 @@ def compute_focus(
     page_machine_ids = repeat_machine_counts.iloc[start:start + page_size]
 
     detail_cols = [
-        "call_date", "customer", "state", "status", "visit_type",
+        "call_date", "customer", "state", "status", "visit_type", "service_type", "employee_name",
         "dealer_code", "dealer_name", "city", "remarks",
     ]
     available_detail_cols = [c for c in detail_cols if c in filtered.columns]

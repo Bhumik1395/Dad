@@ -35,6 +35,8 @@ export interface RepeatMachineCall {
     state: string;
     status: string;
     visit_type: string;
+    service_type: string;
+    employee_name: string;
     dealer_code: string;
     dealer_name: string;
     city: string;
@@ -87,6 +89,7 @@ export interface FilterOptions {
     states: string[];
     machines: string[];
     statuses: string[];
+    serviceTypes: string[];
 }
 
 export interface EmployeeRow {
