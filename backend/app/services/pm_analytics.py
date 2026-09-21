@@ -4,9 +4,11 @@ import pandas as pd
 def compute_pm_dashboard(
     df: pd.DataFrame,
     state: str | None = None,
-    month: str | None = None,          # "YYYY-MM", scopes the weekly chart only
-    dealer_code: str | None = None,    # search text, scopes the PM Detail table only
-    detail_state: str | None = None,   # state filter, scopes the PM Detail table only
+    overall_month: str | None = None,  
+    month: str | None = None,         
+    dealer_code: str | None = None,   
+    detail_state: str | None = None,  
+    detail_month: str | None = None,  
     page: int = 1,
     page_size: int = 50,
 ) -> dict:
@@ -82,11 +84,15 @@ def compute_pm_dashboard(
     )
     weekly_trend_list = weekly_trend.to_dict("records")
 
-    # --- PM Detail table. Independent of the top-level `state` filter --
+        # --- PM Detail table. Independent of the top-level `state` filter --
     # it starts from the full company dataset (`df`), not `filtered`. ---
     detail_source = df
     if detail_state:
         detail_source = detail_source[detail_source["state"] == detail_state]
+    if detail_month:
+        detail_source = detail_source[
+            detail_source["call_date"].dt.strftime("%Y-%m") == detail_month
+        ]
     if dealer_code and "dealer_code" in detail_source.columns:
         detail_source = detail_source[
             detail_source["dealer_code"].str.contains(dealer_code, case=False, na=False, regex=False)

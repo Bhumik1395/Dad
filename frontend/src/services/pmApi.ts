@@ -55,8 +55,8 @@ export interface PmDashboardResponse {
 
 export interface PmFilterOptions {
     states: string[];
+    months: string[];
 }
-
 export interface PmUploadResponse {
     files: { filename: string; row_count: number }[];
     companies: { company: string; total_rows_stored: number }[];
@@ -72,7 +72,7 @@ async function handle<T>(res: Response): Promise<T> {
     return res.json();
 }
 
-/** Upload one or more PM-data .xlsx files at once. */
+
 export function uploadPmFiles(
     files: File[],
     token: string,
@@ -112,9 +112,11 @@ export async function getPmDashboard(
     opts: {
         company?: string;
         state?: string;
+        overallMonth?: string;
         month?: string;
         dealerCode?: string;
         detailState?: string;
+        detailMonth?: string;
         page?: number;
         pageSize?: number;
     } = {}
@@ -122,9 +124,11 @@ export async function getPmDashboard(
     const params = new URLSearchParams();
     if (opts.company) params.set("company", opts.company);
     if (opts.state) params.set("state", opts.state);
+    if (opts.overallMonth) params.set("overall_month", opts.overallMonth);
     if (opts.month) params.set("month", opts.month);
     if (opts.dealerCode) params.set("dealer_code", opts.dealerCode);
     if (opts.detailState) params.set("detail_state", opts.detailState);
+    if (opts.detailMonth) params.set("detail_month", opts.detailMonth);
     params.set("page", String(opts.page ?? 1));
     params.set("page_size", String(opts.pageSize ?? 50));
 

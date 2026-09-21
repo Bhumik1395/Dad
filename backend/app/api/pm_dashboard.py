@@ -12,9 +12,11 @@ router = APIRouter()
 def pm_dashboard(
     company: str | None = None,
     state: str | None = None,
+    overall_month: str | None = None,
     month: str | None = None,
     dealer_code: str | None = None,
     detail_state: str | None = None,
+    detail_month: str | None = None,
     page: int = 1,
     page_size: int = 50,
     user: CurrentUser = Depends(require_roles("customer", "corob_employee")),
@@ -27,8 +29,8 @@ def pm_dashboard(
             "message": f"No PM data uploaded yet for {resolved_company}.",
         })
     return compute_pm_dashboard(
-        df, state=state, month=month, dealer_code=dealer_code,
-        detail_state=detail_state, page=page, page_size=page_size
+        df, state=state, overall_month=overall_month, month=month, dealer_code=dealer_code,
+        detail_state=detail_state, detail_month=detail_month, page=page, page_size=page_size
     )
 
 
