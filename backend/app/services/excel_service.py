@@ -21,15 +21,11 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = df[col].astype(str).str.strip()
             df[col] = df[col].replace({"nan": "", "None": ""})
 
-    # Visit type is optional — some export formats don't include it at all.
-    # When present, normalize and filter to real values as before. When
-    # absent, fill with "Unknown" so downstream charts/tables degrade
-    # gracefully instead of crashing on a missing column.
-    if "visit_type" in df.columns:
-        df["visit_type"] = df["visit_type"].astype(str).str.strip().str.title()
-        df["visit_type"] = df["visit_type"].replace({"Nan": "Unknown", "None": "Unknown"})
-        df = df[df["visit_type"].isin(["Physical", "Online"]) | (df["visit_type"] == "Unknown")]
+    if "call_attended_date" in df.columns:
+        df["call_attended_date"] = pd.to_datetime(df["call_attended_date"], errors="coerce")
+        df["visit_type"] = df["call_attended_date"].notna().map({True: "Physical", False: "Online"})
     else:
+
         df["visit_type"] = "Unknown"
 
     df["under_norm"] = df["status"] == "Undernorm"
@@ -37,7 +33,6 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["loc_up_rem"] = df["loc_up_rem"].str.title()
 
     if "call_attended_date" in df.columns:
-        df["call_attended_date"] = pd.to_datetime(df["call_attended_date"], errors="coerce")
         time_to_attend = (df["call_attended_date"] - df["call_date"]).dt.total_seconds() / 3600
         df["time_to_attend_hours"] = time_to_attend.where(time_to_attend >= 0)
 
