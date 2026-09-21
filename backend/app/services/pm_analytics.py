@@ -132,6 +132,10 @@ def compute_pm_dashboard(
 
 
 def compute_pm_filter_options(df: pd.DataFrame) -> dict:
-    return {
-        "states": sorted(df["state"].dropna().unique().tolist()) if "state" in df.columns else [],
-    }
+    months: list[str] = []
+    if "call_date" in df.columns:
+        months = sorted(
+            df["call_date"].dropna().dt.strftime("%Y-%m").unique().tolist()
+        )
+    states = sorted(df["state"].dropna().unique().tolist()) if "state" in df.columns else []
+    return {"states": states, "months": months}
