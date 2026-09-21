@@ -11,7 +11,6 @@ export function RegionVisitTypeChart({ data }: { data: { region: string; Physica
             { name: "Physical", type: "bar", data: data.map((d) => d.Physical), label: { show: true, position: "top", fontSize: 9, color: "#333" } },
             { name: "Online", type: "bar", data: data.map((d) => d.Online), label: { show: true, position: "top", fontSize: 9, color: "#333" } },
         ],
-        tooltip: { trigger: "axis" },
     };
     return <ReactECharts option={option} style={{ height: 240 }} />;
 }
