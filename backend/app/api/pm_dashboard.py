@@ -42,5 +42,8 @@ def pm_filters(
     resolved_company = resolve_company(user, company)
     df = get_pm_data(resolved_company)
     if df is None:
-        return {"states": []}
+        raise HTTPException(404, {
+            "error": "no_data",
+            "message": f"No PM data uploaded yet for {resolved_company}.",
+        })
     return compute_pm_filter_options(df)
