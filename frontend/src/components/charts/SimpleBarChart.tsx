@@ -20,6 +20,7 @@ export function SimpleBarChart({
             type: "bar",
             data: data.map((d) => d[yKey]),
             barWidth: "60%",
+            itemStyle: { borderRadius: [6, 6, 0, 0] },
             label: { show: true, position: "top", fontSize: 12, color: "#333" },
         }],
 

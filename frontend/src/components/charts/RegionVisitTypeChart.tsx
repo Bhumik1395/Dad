@@ -5,11 +5,11 @@ export function RegionVisitTypeChart({ data }: { data: { region: string; Physica
         color: ["#D32337", "#7DC9B0"],
         legend: { top: 0, textStyle: { fontSize: 12 } },
         grid: { left: 40, right: 10, top: 40, bottom: 30 },
-        xAxis: { type: "category", data: data.map((d) => d.region), axisLabel: { fontSize: 12 } },
+        xAxis: { type: "category", data: data.map((d) => d.region), axisLabel: { fontSize: 12, interval: 0 } },
         yAxis: { type: "value", axisLabel: { fontSize: 12 } },
         series: [
-            { name: "Physical", type: "bar", data: data.map((d) => d.Physical), label: { show: true, position: "top", fontSize: 9, color: "#333" } },
-            { name: "Online", type: "bar", data: data.map((d) => d.Online), label: { show: true, position: "top", fontSize: 9, color: "#333" } },
+            { name: "Physical", type: "bar", data: data.map((d) => d.Physical), itemStyle: { borderRadius: [6, 6, 0, 0] }, label: { show: true, position: "top", fontSize: 9, color: "#333" } },
+            { name: "Online", type: "bar", data: data.map((d) => d.Online), itemStyle: { borderRadius: [6, 6, 0, 0] }, label: { show: true, position: "top", fontSize: 9, color: "#333" } },
         ],
     };
     return <ReactECharts option={option} style={{ height: 240 }} />;

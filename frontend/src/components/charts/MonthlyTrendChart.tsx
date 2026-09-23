@@ -23,6 +23,7 @@ export function MonthlyTrendChart({ data }: { data: MonthlyTrendRow[] }) {
                 type: "bar",
                 yAxisIndex: 0,
                 data: data.map((d) => d.calls),
+                itemStyle: { borderRadius: [6, 6, 0, 0] },
                 label: { show: true, position: "top", fontSize: 12, color: "#333" },
             },
             {
@@ -30,6 +31,7 @@ export function MonthlyTrendChart({ data }: { data: MonthlyTrendRow[] }) {
                 type: "bar",
                 yAxisIndex: 0,
                 data: data.map((d) => d.repeat_calls),
+                itemStyle: { borderRadius: [6, 6, 0, 0] },
                 label: { show: true, position: "top", fontSize: 12, color: "#333" },
             },
             {
@@ -37,6 +39,7 @@ export function MonthlyTrendChart({ data }: { data: MonthlyTrendRow[] }) {
                 type: "bar",
                 yAxisIndex: 1,
                 data: data.map((d) => d.under_norm_pct),
+                itemStyle: { borderRadius: [6, 6, 0, 0] },
                 label: { show: true, position: "top", fontSize: 12, color: "#333", formatter: "{c}%" },
             },
         ],
