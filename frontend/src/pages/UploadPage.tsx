@@ -1,16 +1,17 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { UploadCloud, X, AlertCircle } from "lucide-react";
+import { UploadCloud, X, AlertCircle, FileSpreadsheet } from "lucide-react";
 import { uploadExcel } from "../services/api";
 
 export default function UploadPage() {
     const navigate = useNavigate();
     const [dragOver, setDragOver] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
     const mutation = useMutation({
-        mutationFn: (file: File) => uploadExcel(file, setProgress),
+        mutationFn: (files: File[]) => uploadExcel(files, setProgress),
         onSuccess: () => {
             setProgress(100);
             navigate("/dashboard/focus");
@@ -18,10 +19,20 @@ export default function UploadPage() {
         onError: () => setProgress(0),
     });
 
-    const handleFile = useCallback((file: File) => {
+    const addFiles = useCallback((incoming: FileList | File[]) => {
+        const xlsxFiles = Array.from(incoming).filter((f) => f.name.endsWith(".xlsx"));
+        setPendingFiles((prev) => [...prev, ...xlsxFiles]);
+    }, []);
+
+    const removeFile = (name: string) => {
+        setPendingFiles((prev) => prev.filter((f) => f.name !== name));
+    };
+
+    const handleUpload = () => {
+        if (pendingFiles.length === 0) return;
         setProgress(0);
-        mutation.mutate(file);
-    }, [mutation]);
+        mutation.mutate(pendingFiles);
+    };
 
     return (
         <div className="p-6 max-w-3xl mx-auto">
@@ -30,9 +41,9 @@ export default function UploadPage() {
                     Upload your service call report
                 </h1>
                 <p className="text-center text-gray-500 mb-6">
-                    Drag and drop your Excel (.xlsx) file containing the quarterly or
-                    employee analytics data. Uploading a new file replaces the current
-                    dashboard data.
+                    Drag and drop one or more Excel (.xlsx) files containing the quarterly or
+                    employee analytics data. Uploading replaces the current dashboard data;
+                    multiple files are merged together automatically.
                 </p>
 
                 {mutation.isError && (
@@ -47,42 +58,66 @@ export default function UploadPage() {
                 )}
 
                 {!mutation.isPending && (
-                    <div
-                        className="border-2 border-dashed rounded-lg p-10 text-center transition-colors"
-                        style={{
-                            borderColor: dragOver ? "var(--color-accent)" : "#d1d5db",
-                            background: dragOver ? "var(--color-accent-light)" : "transparent",
-                        }}
-                        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                        onDragLeave={() => setDragOver(false)}
-                        onDrop={(e) => {
-                            e.preventDefault(); setDragOver(false);
-                            const file = e.dataTransfer.files[0];
-                            if (file) handleFile(file);
-                        }}
-                    >
+                    <>
                         <div
-                            className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4"
-                            style={{ background: "var(--color-accent-light)" }}
+                            className="border-2 border-dashed rounded-lg p-10 text-center transition-colors"
+                            style={{
+                                borderColor: dragOver ? "var(--color-accent)" : "#d1d5db",
+                                background: dragOver ? "var(--color-accent-light)" : "transparent",
+                            }}
+                            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                            onDragLeave={() => setDragOver(false)}
+                            onDrop={(e) => {
+                                e.preventDefault(); setDragOver(false);
+                                if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+                            }}
                         >
-                            <UploadCloud style={{ color: "var(--color-accent)" }} size={26} />
+                            <div
+                                className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4"
+                                style={{ background: "var(--color-accent-light)" }}
+                            >
+                                <UploadCloud style={{ color: "var(--color-accent)" }} size={26} />
+                            </div>
+                            <p className="font-medium mb-1">Drag & Drop file(s) here</p>
+                            <p className="text-sm text-gray-500 mb-4">Supported formats: .xlsx (Max 50MB each, up to 10 files)</p>
+                            <div className="flex items-center gap-3 mb-4">
+                                <hr className="flex-1" /><span className="text-xs text-gray-400">OR</span><hr className="flex-1" />
+                            </div>
+                            <label
+                                className="inline-block text-white text-sm font-medium px-4 py-2 rounded-md cursor-pointer"
+                                style={{ background: "var(--color-accent)" }}
+                            >
+                                Browse files
+                                <input
+                                    type="file" accept=".xlsx" multiple className="hidden"
+                                    onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
+                                />
+                            </label>
                         </div>
-                        <p className="font-medium mb-1">Drag & Drop file here</p>
-                        <p className="text-sm text-gray-500 mb-4">Supported formats: .xlsx (Max 50MB)</p>
-                        <div className="flex items-center gap-3 mb-4">
-                            <hr className="flex-1" /><span className="text-xs text-gray-400">OR</span><hr className="flex-1" />
-                        </div>
-                        <label
-                            className="inline-block text-white text-sm font-medium px-4 py-2 rounded-md cursor-pointer"
-                            style={{ background: "var(--color-accent)" }}
-                        >
-                            Browse file
-                            <input
-                                type="file" accept=".xlsx" className="hidden"
-                                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-                            />
-                        </label>
-                    </div>
+
+                        {pendingFiles.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                                {pendingFiles.map((f) => (
+                                    <div key={f.name} className="flex items-center gap-3 border rounded-lg p-2.5 text-sm" style={{ borderColor: "var(--color-border)" }}>
+                                        <FileSpreadsheet size={16} className="text-gray-400 shrink-0" />
+                                        <span className="flex-1 truncate">{f.name}</span>
+                                        <span className="text-xs text-gray-400 shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+                                        <button onClick={() => removeFile(f.name)} className="text-gray-400 hover:text-gray-700 shrink-0">
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+
+                                <button
+                                    onClick={handleUpload}
+                                    className="w-full mt-2 text-white text-sm font-medium px-4 py-2.5 rounded-md"
+                                    style={{ background: "var(--color-accent)" }}
+                                >
+                                    Upload {pendingFiles.length} file{pendingFiles.length > 1 ? "s" : ""}
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {mutation.isPending && (
@@ -95,7 +130,7 @@ export default function UploadPage() {
                         </div>
                         <div className="flex-1">
                             <p className="text-sm font-medium">
-                                {progress < 100 ? `Uploading (${progress}%)…` : "Processing your file…"}
+                                {progress < 100 ? `Uploading (${progress}%)…` : "Processing your file(s)…"}
                             </p>
                             <div className="h-1.5 bg-gray-200 rounded-full mt-1.5 overflow-hidden">
                                 <div

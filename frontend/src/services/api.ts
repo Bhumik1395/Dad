@@ -134,14 +134,20 @@ export interface UtilizationResponse {
     supervisors: SupervisorRow[];
 }
 
+export interface UploadResponse {
+    session_id: string;
+    row_count: number;
+    files: { filename: string; row_count: number }[];
+}
+
 export function uploadExcel(
-    file: File,
+    files: File[],
     onProgress?: (pct: number) => void
-): Promise<{ session_id: string; row_count: number }> {
+): Promise<UploadResponse> {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         const form = new FormData();
-        form.append("file", file);
+        files.forEach((f) => form.append("files", f));
 
         xhr.open("POST", `${API_BASE}/api/upload`);
         xhr.withCredentials = true;
@@ -157,7 +163,7 @@ export function uploadExcel(
             let body: any = {};
             try {
                 body = JSON.parse(xhr.responseText);
-            } catch {}
+            } catch { }
 
             if (xhr.status >= 200 && xhr.status < 300) {
                 resolve(body);
