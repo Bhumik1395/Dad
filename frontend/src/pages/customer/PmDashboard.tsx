@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, FileText, FileX, Search } from "lucide-react";
-import { getCompanies, getPmDashboard, getPmFilterOptions, pmPdfUrl } from "../../services/pmApi";
+import { getPmDashboard, getPmFilterOptions, getCompanies, pmPdfUrl } from "../../services/pmApi";
 import { useAuth } from "../../auth/AuthContext";
 import { PmMonthlyTrendChart } from "../../components/charts/PmMonthlyTrendChart";
 import { PmWeeklyTrendChart } from "../../components/charts/PmWeeklyTrendChart";
@@ -25,7 +25,6 @@ function formatMonthFull(yearMonth: string): string {
 export default function PmDashboard() {
     const { token, roles, company: myCompany } = useAuth();
     const [state, setState] = useState("");
-    const [overallMonth, setOverallMonth] = useState("");
     const [page, setPage] = useState(1);
     const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
     const [openPdf, setOpenPdf] = useState<{ url: string; title: string } | null>(null);
@@ -50,25 +49,11 @@ export default function PmDashboard() {
     const isEmployee = roles.includes("corob_employee");
     const activeCompany = isEmployee ? employeeCompany : myCompany ?? undefined;
 
-    const { data: companies, isLoading: isLoadingCompanies, isError: isCompaniesError } = useQuery({
+    const { data: companiesData } = useQuery({
         queryKey: ["companies"],
         queryFn: () => getCompanies(token!),
         enabled: !!token && isEmployee,
-        staleTime: Infinity,
     });
-
-    const handleEmployeeCompanyChange = (company: string) => {
-        setEmployeeCompany(company);
-        setState("");
-        setOverallMonth("");
-        setWeeklyMonth(undefined);
-        setDealerSearchInput("");
-        setDealerSearch("");
-        setDetailState("");
-        setDetailMonth("");
-        setPage(1);
-        setExpandedRegions(new Set());
-    };
 
     const { data: filterOptions } = useQuery({
         queryKey: ["pmFilterOptions", activeCompany],
@@ -77,11 +62,10 @@ export default function PmDashboard() {
     });
 
     const { data, isLoading, isFetching, isError, error } = useQuery({
-        queryKey: ["pmDashboard", activeCompany, state, overallMonth, weeklyMonth, dealerSearch, detailState, detailMonth, page],
+        queryKey: ["pmDashboard", activeCompany, state, weeklyMonth, dealerSearch, detailState, detailMonth, page],
         queryFn: () => getPmDashboard(token!, {
             company: activeCompany,
             state: state || undefined,
-            overallMonth: overallMonth || undefined,
             month: weeklyMonth,
             dealerCode: dealerSearch || undefined,
             detailState: detailState || undefined,
@@ -139,32 +123,26 @@ export default function PmDashboard() {
                     <select
                         className="border rounded-lg px-3 py-2 text-sm w-72"
                         value={employeeCompany}
-                        onChange={(e) => handleEmployeeCompanyChange(e.target.value)}
-                        disabled={isLoadingCompanies}
+                        onChange={(e) => { setPage(1); setEmployeeCompany(e.target.value); }}
                     >
-                        <option value="">
-                            {isLoadingCompanies ? "Loading companies..." : "Select a company"}
-                        </option>
-                        {companies?.companies.map((company) => (
-                            <option key={company} value={company}>{company}</option>
+                        <option value="">Select a company…</option>
+                        {companiesData?.companies.map((c) => (
+                            <option key={c} value={c}>{c}</option>
                         ))}
                     </select>
-                    {isCompaniesError && (
-                        <p className="mt-1 text-xs text-red-600">Unable to load companies.</p>
-                    )}
                 </div>
             )}
 
             {!activeCompany && (
                 <p className="text-sm text-gray-500">
-                    {isEmployee ? "Select a company to view its PM dashboard." : "No company assigned to this account."}
+                    {isEmployee ? "Enter a company to view its PM dashboard." : "No company assigned to this account."}
                 </p>
             )}
 
             {activeCompany && isLoading && <PmDashboardSkeleton />}
 
             {activeCompany && !isLoading && (
-                <div className="grid grid-cols-4 gap-3 mb-6 items-center">
+                <div className="flex items-center gap-3 mb-6">
                     <select
                         className="border rounded-lg px-3 py-2 text-sm"
                         value={state}
@@ -172,12 +150,6 @@ export default function PmDashboard() {
                     >
                         <option value="">All States</option>
                         {filterOptions?.states.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <select
-                        className="border rounded-lg px-3 py-2 text-sm"
-                        value={overallMonth}
-                        onChange={(e) => { setPage(1); setOverallMonth(e.target.value); }}
-                    >
                     </select>
                     {isFetching && !isLoading && (
                         <span className="text-xs text-gray-400">Updating…</span>
@@ -308,6 +280,10 @@ export default function PmDashboard() {
                                     value={detailMonth}
                                     onChange={(e) => { setPage(1); setDetailMonth(e.target.value); }}
                                 >
+                                    <option value="">All Months</option>
+                                    {filterOptions?.months.map((m) => (
+                                        <option key={m} value={m}>{formatMonthFull(m)}</option>
+                                    ))}
                                 </select>
                                 <div className="relative">
                                     <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
