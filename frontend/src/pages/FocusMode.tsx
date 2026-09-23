@@ -7,7 +7,7 @@ import { RepeatMachinesTable } from "../components/tables/RepeatMachinesTable";
 import { useFocusFilter } from "../context/FocusFilterContext";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { MonthlyTrendChart } from "../components/charts/MonthlyTrendChart";
-import { FocusModeSkeleton } from "../components/skeletons/FocusModeSkeleton";
+import { FocusModeSkeleton } from "../components/skeletons/Focusmodeskeleton";
 
 function formatHoursOnly(hours: number | null): string {
     if (hours === null) return "—";
