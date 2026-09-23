@@ -34,7 +34,6 @@ def create_report(request: Request, customer: str = None):
 
     focus_data = compute_focus(df, customer=customer)
 
-    # Flatten regionBreakdown back into a flat state list for the PDF table
     state_breakdown = [
         state for region in focus_data["regionBreakdown"] for state in region["states"]
     ]

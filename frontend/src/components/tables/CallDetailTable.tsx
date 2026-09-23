@@ -23,7 +23,7 @@ export function CallDetailTable({
         if (!isNaN(n) && n >= 1 && n <= totalPages) {
             onPageChange(n);
         } else {
-            setJumpValue(String(page)); // reset to current page if invalid
+            setJumpValue(String(page));
         }
     };
 

@@ -1,20 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
 
-const SESSION_DURATION_MS = 10 * 60 * 1000; // 10 minutes, strict — not reset by activity
-const PROMPT_DURATION_MS = 30 * 1000;       // 30 seconds to respond before logout
-
-/**
- * Mount this once, high up in the tree (inside AuthProvider, alongside
- * <Routes>) so it applies to every dashboard automatically. It doesn't
- * need to live inside each dashboard shell separately.
- *
- * On logout, this component doesn't navigate anywhere itself — it just
- * calls logout(), which flips `authenticated` to false. Every dashboard
- * route is already wrapped in <ProtectedRoute>, which redirects to
- * /login as soon as it sees `authenticated === false` on its next
- * render. So the redirect-to-login happens for free, no extra wiring.
- */
+const SESSION_DURATION_MS = 10 * 60 * 1000;
+const PROMPT_DURATION_MS = 30 * 1000;
 export default function SessionTimeoutGuard() {
     const { authenticated, logout } = useAuth();
     const [showPrompt, setShowPrompt] = useState(false);
@@ -46,9 +34,7 @@ export default function SessionTimeoutGuard() {
                 fetch(`${import.meta.env.VITE_API_BASE_URL}/api/session`, {
                     method: "DELETE",
                     credentials: "include",
-                }).catch(() => {
-                    // Best-effort — don't block logout if this fails.
-                }).finally(() => {
+                }).catch(() => {}).finally(() => {
                     logout();
                 });
             }, PROMPT_DURATION_MS);
@@ -63,11 +49,10 @@ export default function SessionTimeoutGuard() {
             setShowPrompt(false);
         }
         return clearAllTimers;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authenticated]);
 
     const handleStayLoggedIn = () => {
-        startSessionTimer(); // gives another full 10 minutes
+        startSessionTimer();
     };
 
     if (!authenticated || !showPrompt) return null;

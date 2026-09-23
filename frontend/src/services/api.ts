@@ -157,9 +157,7 @@ export function uploadExcel(
             let body: any = {};
             try {
                 body = JSON.parse(xhr.responseText);
-            } catch {
-                /* non-JSON response */
-            }
+            } catch {}
 
             if (xhr.status >= 200 && xhr.status < 300) {
                 resolve(body);

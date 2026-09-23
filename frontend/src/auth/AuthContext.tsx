@@ -11,7 +11,7 @@ interface AuthContextValue {
     roles: string[];
     company: string | null;
     token: string | null;
-    signIn: (email: string, password: string) => Promise<string | null>; // returns error message, or null on success
+    signIn: (email: string, password: string) => Promise<string | null>;
     logout: () => void;
     authError: string | null;
 }
@@ -49,8 +49,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     useEffect(() => {
-        // Supabase persists the session in localStorage itself and keeps the
-        // access token refreshed in the background -- we just react to it.
         supabase.auth.getSession().then(({ data }) => {
             const accessToken = data.session?.access_token;
             (accessToken ? resolveIdentity(accessToken) : Promise.resolve(false)).finally(() =>
@@ -79,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (data.session) {
             const ok = await resolveIdentity(data.session.access_token);
             if (!ok) {
-                await supabase.auth.signOut(); // don't leave a "logged in but not authorized" Supabase session dangling
+                await supabase.auth.signOut();
                 return authError ?? "Your account isn't authorized for this app yet.";
             }
         }

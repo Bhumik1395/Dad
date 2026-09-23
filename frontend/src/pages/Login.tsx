@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { LogIn, AlertCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { AuthInitSkeleton } from "../components/skeletons/Authinitskeleton";
 
 export default function Login() {
     const { initialized, authenticated, roles, signIn } = useAuth();
@@ -15,11 +16,7 @@ export default function Login() {
     }, []);
 
     if (!initialized) {
-        return (
-            <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-bg)" }}>
-                <p className="text-gray-500 text-sm">Loading…</p>
-            </div>
-        );
+        return <AuthInitSkeleton />;
     }
 
     if (authenticated) {

@@ -19,9 +19,7 @@ export default function CustomerDashboardShell() {
         setSigningOut(true);
         try {
             await deleteAllPmData(token!);
-        } catch {
-            // Best-effort — don't block sign-out if this fails.
-        } finally {
+        } catch {} finally {
             logout();
         }
     };

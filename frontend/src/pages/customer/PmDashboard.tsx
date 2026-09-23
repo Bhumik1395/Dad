@@ -6,6 +6,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { PmMonthlyTrendChart } from "../../components/charts/PmMonthlyTrendChart";
 import { PmWeeklyTrendChart } from "../../components/charts/PmWeeklyTrendChart";
 import { PdfViewerModal } from "../../components/PdfViewerModal";
+import { PmDashboardSkeleton } from "../../components/skeletons/Pmdashboardskeleton";
 
 function formatMonthShort(yearMonth: string): string {
     const [year, month] = yearMonth.split("-");
@@ -130,7 +131,9 @@ export default function PmDashboard() {
                 </p>
             )}
 
-            {activeCompany && (
+            {activeCompany && isLoading && <PmDashboardSkeleton />}
+
+            {activeCompany && !isLoading && (
                 <div className="grid grid-cols-4 gap-3 mb-6 items-center">
                     <select
                         className="border rounded-lg px-3 py-2 text-sm"
@@ -156,7 +159,6 @@ export default function PmDashboard() {
                 </div>
             )}
 
-            {activeCompany && isLoading && <p>Loading…</p>}
             {activeCompany && !isLoading && isError && (
                 <p className="text-sm text-red-600">
                     {(error as any)?.message ?? "No PM data uploaded yet for this company."}

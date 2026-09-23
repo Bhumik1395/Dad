@@ -14,7 +14,7 @@ export default function EmployeeAnalysis() {
     const { data, isLoading, isError } = useQuery({
         queryKey: ["employees", page, debouncedSearch],
         queryFn: () => getEmployeeDashboard(page, 50, debouncedSearch),
-        placeholderData: keepPreviousData, // keeps showing old rows while new ones load, no flash/reload feel
+        placeholderData: keepPreviousData,
     });
 
     useEffect(() => {

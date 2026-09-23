@@ -24,8 +24,6 @@ def compute_focus(
     if machine: filtered = filtered[filtered["machine_no"] == machine]
     if status: filtered = filtered[filtered["status"] == status]
 
-    # Gdata rows are routine G-data updates, not real service visits — drop
-    # them from this view entirely (not just from repeat-call counting).
     if "service_type" in filtered.columns:
         filtered = filtered[filtered["service_type"] != "Gdata"]
         if service_type:

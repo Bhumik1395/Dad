@@ -31,16 +31,11 @@ function DashboardShellInner() {
 
     const handleSignOut = async () => {
         try {
-            // Sign out used to leave the old Service Call session cookie/cache
-            // intact (they're on separate systems), so re-logging in within
-            // the hour showed stale data. Clear it explicitly here too.
             await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/session`, {
                 method: "DELETE",
                 credentials: "include",
             });
-        } catch {
-            // Best-effort — don't block sign-out if this fails.
-        }
+        } catch {}
         logout();
     };
 

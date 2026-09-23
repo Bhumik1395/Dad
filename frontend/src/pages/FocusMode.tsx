@@ -7,6 +7,7 @@ import { RepeatMachinesTable } from "../components/tables/RepeatMachinesTable";
 import { useFocusFilter } from "../context/FocusFilterContext";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { MonthlyTrendChart } from "../components/charts/MonthlyTrendChart";
+import { FocusModeSkeleton } from "../components/skeletons/FocusModeSkeleton";
 
 function formatHoursOnly(hours: number | null): string {
     if (hours === null) return "—";
@@ -50,6 +51,8 @@ export default function FocusMode() {
         });
     };
 
+    if (isLoading) return <FocusModeSkeleton />;
+
     return (
         <div className="p-6">
             <div className="grid grid-cols-5 gap-3 mb-2">
@@ -79,7 +82,6 @@ export default function FocusMode() {
                 {isFetching && !isLoading && <span className="text-xs text-gray-400">Updating…</span>}
             </div>
 
-            {isLoading && <p>Loading…</p>}
             {!isLoading && (isError || !data) && <p>Failed to load dashboard data.</p>}
 
             {!isLoading && data && (

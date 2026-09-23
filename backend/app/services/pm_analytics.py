@@ -19,7 +19,6 @@ def compute_pm_dashboard(
     total_pms = len(filtered)
     closed_pms = int(filtered["is_closed"].sum())
 
-    # --- Region / state breakdown ---
     state_grouped = filtered.groupby("state").agg(
         total_pms=("ticket_no", "count"),
         closed_pms=("is_closed", "sum"),
@@ -61,15 +60,12 @@ def compute_pm_dashboard(
             "states": states_in_region,
         })
 
-    # --- Monthly analysis: PM count per calendar month ---
     monthly = filtered.copy()
     monthly["year_month"] = monthly["call_date"].dt.strftime("%Y-%m")
     pms_per_month = monthly.groupby("year_month").size().reset_index(name="pm_count")
     monthly_trend = pms_per_month.sort_values("year_month")
     monthly_trend_list = monthly_trend.to_dict("records")
 
-    # --- Weekly analysis: how many new PMs were done each ISO week,
-    # scoped to one calendar month ---
     available_months = sorted(monthly["year_month"].unique().tolist())
     weekly_month = month or (available_months[-1] if available_months else None)
 
@@ -84,8 +80,6 @@ def compute_pm_dashboard(
     )
     weekly_trend_list = weekly_trend.to_dict("records")
 
-        # --- PM Detail table. Independent of the top-level `state` filter --
-    # it starts from the full company dataset (`df`), not `filtered`. ---
     detail_source = df
     if detail_state:
         detail_source = detail_source[detail_source["state"] == detail_state]

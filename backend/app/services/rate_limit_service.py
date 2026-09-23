@@ -1,14 +1,3 @@
-"""Login rate limiting.
-
-Blocks brute-forcing by (device_id cookie, IP) pair. Neither signal alone is
-airtight -- IP can be shared (NAT/VPN) or rotated, and a device cookie can be
-cleared -- but requiring *both* to reset the counter raises the bar
-meaningfully above no limiting at all. If you need stronger guarantees,
-pair this with Supabase's own dashboard-level auth rate limits too.
-
-Reuses the same Redis/Valkey connection as cache_service.py -- no new
-infra required.
-"""
 from __future__ import annotations
 
 import time
@@ -16,21 +5,17 @@ import uuid
 
 from fastapi import HTTPException, Request, Response, status
 
-from app.services.cache_service import r  # existing Valkey connection
+from app.services.cache_service import r
 
 MAX_ATTEMPTS = 5
-WINDOW_SECONDS = 15 * 60       # attempts counted in a rolling 15 min window
-LOCKOUT_SECONDS = 30 * 60      # once tripped, blocked for 30 min
+WINDOW_SECONDS = 15 * 60
+LOCKOUT_SECONDS = 30 * 60
 
 DEVICE_COOKIE_NAME = "device_id"
-DEVICE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1 year
+DEVICE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 
 def _client_ip(request: Request) -> str:
-    # If you're behind a reverse proxy / load balancer, make sure it's
-    # configured to set X-Forwarded-For and that FastAPI/uvicorn is
-    # trusting it -- otherwise every request looks like it comes from the
-    # proxy's own IP and this rate limiter becomes useless.
     fwd = request.headers.get("x-forwarded-for")
     if fwd:
         return fwd.split(",")[0].strip()

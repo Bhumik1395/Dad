@@ -21,20 +21,12 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = df[col].astype(str).str.strip()
             df[col] = df[col].replace({"nan": "", "None": ""})
 
-    # Visit type is derived from Call Attended, not read from the file directly:
-    # a filled call_attended_date means an engineer physically attended the
-    # call; an empty one means it was resolved online (phone/remote), with no
-    # physical visit logged.
     if "call_attended_date" in df.columns:
         df["call_attended_date"] = pd.to_datetime(df["call_attended_date"], errors="coerce")
         df["visit_type"] = df["call_attended_date"].notna().map({True: "Physical", False: "Online"})
     else:
-        # No Call Attended column in this file at all — can't determine visit type.
         df["visit_type"] = "Unknown"
 
-    # Service Type: normalize to "Service", "Other", or "Gdata" (title case).
-    # "Gdata" rows are routine G-data updates, not real repeat service visits —
-    # they're excluded from repeat-call calculations in focus_analytics.py.
     if "service_type" in df.columns:
         df["service_type"] = df["service_type"].astype(str).str.strip().str.title()
         df["service_type"] = df["service_type"].replace({"Nan": "", "None": ""})
