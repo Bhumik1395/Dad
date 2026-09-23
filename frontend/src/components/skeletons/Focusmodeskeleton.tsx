@@ -3,18 +3,15 @@ import { Skeleton, SkeletonCard, SkeletonPanel, SkeletonTableRows, SkeletonPagin
 export function FocusModeSkeleton() {
     return (
         <div className="p-6">
-            <div className="grid grid-cols-5 gap-3 mb-2">
-                {Array.from({ length: 5 }).map((_, i) => (
+            <div className="grid grid-cols-3 gap-3 mb-2">
+                {Array.from({ length: 3 }).map((_, i) => (
                     <Skeleton key={i} className="h-9 w-full" />
                 ))}
             </div>
             <div className="h-5 mb-4" />
 
-            <div className="grid grid-cols-3 gap-4 mb-4">
-                {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
-            </div>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-                {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+            <div className="grid grid-cols-6 gap-4 mb-6">
+                {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
 
             <div className="bg-white rounded-xl border overflow-hidden mb-4" style={{ borderColor: "var(--color-border)" }}>

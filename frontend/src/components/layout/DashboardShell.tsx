@@ -1,22 +1,106 @@
 import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import { Scan, BarChart2, Users, Gauge, FileText, LogOut, UploadCloud } from "lucide-react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Menu, LogOut, FileText, UploadCloud, ChevronDown, ChevronRight } from "lucide-react";
 import { downloadPdfReport } from "../../services/api";
 import { FocusFilterProvider, useFocusFilter } from "../../context/FocusFilterContext";
 import { useAuth } from "../../auth/AuthContext";
 
-const navItems = [
-    { to: "/dashboard/focus", label: "Focus Mode", icon: Scan },
-    { to: "/dashboard/quarterly", label: "Quarterly Analysis", icon: BarChart2 },
-    { to: "/dashboard/employees", label: "Employee Analysis", icon: Users },
-    { to: "/dashboard/utilization", label: "Engineer Utilization", icon: Gauge },
-    { to: "/dashboard/upload", label: "Upload Data", icon: UploadCloud },
+interface NavLeaf {
+    to: string;
+    label: string;
+}
+
+interface NavGroupDef {
+    label: string;
+    children: NavLeaf[];
+}
+
+const navGroups: NavGroupDef[] = [
+    {
+        label: "Service Calls",
+        children: [
+            { to: "/dashboard/focus", label: "Focus Mode" },
+            { to: "/dashboard/quarterly", label: "Quarterly Analysis" },
+        ],
+    },
+    {
+        label: "Preventive Measure",
+        children: [{ to: "/dashboard/pm", label: "Preventive Measure" }],
+    },
+    {
+        label: "Engineer Utilization",
+        children: [
+            { to: "/dashboard/employees", label: "Employee Analysis" },
+            { to: "/dashboard/utilization", label: "Engineer Utilization" },
+        ],
+    },
 ];
 
+function NavGroup({ group }: { group: NavGroupDef }) {
+    const location = useLocation();
+    const isSingleChild = group.children.length === 1;
+    const isActive = group.children.some((c) => location.pathname.startsWith(c.to));
+    const [open, setOpen] = useState(isActive);
+
+    if (isSingleChild) {
+        return (
+            <NavLink
+                to={group.children[0].to}
+                className="w-full block text-center text-lg py-8 hover:text-red-600 transition-colors"
+                style={({ isActive }) =>
+                    isActive
+                        ? { color: "var(--color-accent)", fontWeight: 600 }
+                        : { color: "#111827" }
+                }
+            >
+                {group.label}
+            </NavLink>
+        );
+    }
+
+    return (
+        <div className="w-full">
+            <button
+                onClick={() => setOpen((o) => !o)}
+                className="w-full flex items-center justify-center gap-1.5 text-center text-lg py-8 hover:text-red-600 transition-colors"
+                style={isActive ? { color: "var(--color-accent)", fontWeight: 600 } : { color: "#111827" }}
+            >
+                {group.label}
+                {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </button>
+            {open && (
+                <div className="flex flex-col items-center gap-1 pb-4 -mt-4">
+                    {group.children.map((child) => (
+                        <NavLink
+                            key={child.to}
+                            to={child.to}
+                            className="text-sm py-2 px-3 rounded-md hover:bg-gray-50"
+                            style={({ isActive }) =>
+                                isActive
+                                    ? { color: "var(--color-accent)", fontWeight: 600, background: "var(--color-accent-light)" }
+                                    : { color: "#6b7280" }
+                            }
+                        >
+                            {child.label}
+                        </NavLink>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function DashboardShellInner() {
+    const [collapsed, setCollapsed] = useState(false);
     const [generating, setGenerating] = useState(false);
     const { customer } = useFocusFilter();
-    const { logout } = useAuth();
+    const { username, roles, logout } = useAuth();
+
+    const roleLabel = roles.includes("corob_employee")
+        ? "Corob Employee"
+        : roles.includes("customer")
+            ? "Customer"
+            : "";
 
     const handleGeneratePdf = async () => {
         setGenerating(true);
@@ -31,67 +115,90 @@ function DashboardShellInner() {
 
     const handleSignOut = async () => {
         try {
+            // Sign out used to leave the old Service Call session cookie/cache
+            // intact (they're on separate systems), so re-logging in within
+            // the hour showed stale data. Clear it explicitly here too.
             await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/session`, {
                 method: "DELETE",
                 credentials: "include",
             });
-        } catch {}
+        } catch {
+            // Best-effort — don't block sign-out if this fails.
+        }
         logout();
     };
 
     return (
-        <div className="h-screen flex overflow-hidden" style={{ background: "var(--color-bg)" }}>
-            <aside className="w-64 h-screen shrink-0 bg-white border-r flex flex-col justify-between" style={{ borderColor: "var(--color-border)" }}>
-                <div>
-                    <div className="p-6">
-                        <h1 className="text-lg font-bold" style={{ color: "var(--color-accent)" }}>Corob Service</h1>
-                        <p className="text-xs text-gray-500">Analytics Dashboard</p>
+        <div className="h-screen flex flex-col overflow-hidden" style={{ background: "var(--color-bg)" }}>
+            <header className="shrink-0 flex items-center justify-between px-8 py-5 bg-white border-b-2 border-black">
+                <div className="text-2xl font-extrabold tracking-tight lowercase">
+                    cor<span style={{ color: "var(--color-accent)" }}>o</span>b
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="text-right leading-tight">
+                        <p className="font-semibold text-gray-900">{username}</p>
+                        <p className="text-sm text-gray-500">{roleLabel}</p>
                     </div>
-                    <nav className="px-3">
-                        {navItems.map(({ to, label, icon: Icon }) => (
-                            <NavLink
-                                key={to}
-                                to={to}
-                                className={({ isActive }) =>
-                                    `flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 ${isActive ? "font-medium border-l-2" : "text-gray-600 hover:bg-gray-50"
-                                    }`
-                                }
-                                style={({ isActive }) =>
-                                    isActive
-                                        ? { background: "var(--color-accent-light)", color: "var(--color-accent)", borderColor: "var(--color-accent)" }
-                                        : undefined
-                                }
-                            >
-                                <Icon size={18} /> {label}
-                            </NavLink>
-                        ))}
-                    </nav>
+                    <button onClick={handleSignOut} title="Sign out" className="text-gray-700 hover:text-red-600">
+                        <LogOut size={20} />
+                    </button>
                 </div>
+            </header>
 
-                <div className="p-4 border-t shrink-0 flex flex-col gap-2" style={{ borderColor: "var(--color-border)" }}>
-                    {customer && (
-                        <p className="text-xs text-gray-500 px-1">PDF for: <span className="font-medium text-gray-700">{customer}</span></p>
+            <div className="flex-1 flex overflow-hidden">
+                <aside
+                    className={`h-full shrink-0 bg-white border-r-2 border-black flex flex-col transition-all duration-200 ${collapsed ? "w-16" : "w-64"
+                        }`}
+                >
+                    <button
+                        onClick={() => setCollapsed((c) => !c)}
+                        className="p-5 text-gray-800 hover:text-red-600 self-start"
+                        title={collapsed ? "Expand menu" : "Collapse menu"}
+                    >
+                        <Menu size={22} />
+                    </button>
+
+                    {!collapsed && (
+                        <nav className="flex-1 flex flex-col overflow-y-auto px-2">
+                            {navGroups.map((group) => (
+                                <NavGroup key={group.label} group={group} />
+                            ))}
+
+                            <div className="mt-auto pt-4 pb-4 border-t flex flex-col items-center gap-2" style={{ borderColor: "var(--color-border)" }}>
+                                <NavLink
+                                    to="/dashboard/upload"
+                                    className="w-full flex items-center justify-center gap-2 text-sm py-2 rounded-md hover:bg-gray-50"
+                                    style={({ isActive }) =>
+                                        isActive
+                                            ? { color: "var(--color-accent)", fontWeight: 600 }
+                                            : { color: "#374151" }
+                                    }
+                                >
+                                    <UploadCloud size={16} /> Upload Data
+                                </NavLink>
+
+                                {customer && (
+                                    <p className="text-xs text-gray-500 px-1 text-center">
+                                        PDF for: <span className="font-medium text-gray-700">{customer}</span>
+                                    </p>
+                                )}
+                                <button
+                                    onClick={handleGeneratePdf}
+                                    disabled={generating}
+                                    className="w-full flex items-center justify-center gap-2 text-sm text-white rounded-lg py-2 disabled:opacity-60"
+                                    style={{ background: "var(--color-accent)" }}
+                                >
+                                    <FileText size={14} /> {generating ? "Generating…" : "Generate PDF Report"}
+                                </button>
+                            </div>
+                        </nav>
                     )}
-                    <button
-                        onClick={handleGeneratePdf}
-                        disabled={generating}
-                        className="w-full flex items-center justify-center gap-2 text-sm text-white rounded-lg py-2 disabled:opacity-60"
-                        style={{ background: "var(--color-accent)" }}
-                    >
-                        <FileText size={14} /> {generating ? "Generating…" : "Generate PDF Report"}
-                    </button>
-                    <button
-                        onClick={handleSignOut}
-                        className="w-full flex items-center justify-center gap-2 text-sm border rounded-lg py-2 hover:bg-gray-50"
-                    >
-                        <LogOut size={14} /> Sign out
-                    </button>
-                </div>
-            </aside>
+                </aside>
 
-            <main className="flex-1 h-screen overflow-y-auto">
-                <Outlet />
-            </main>
+                <main className="flex-1 h-full overflow-y-auto">
+                    <Outlet />
+                </main>
+            </div>
         </div>
     );
 }
