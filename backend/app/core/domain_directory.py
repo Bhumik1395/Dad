@@ -10,3 +10,13 @@ def look_up_domain(domain: str) -> dict | None:
     with open(_DIRECTORY_PATH) as f:
         directory = json.load(f)
     return directory.get(domain.strip().lower())
+
+
+def list_companies() -> list[str]:
+    """All distinct client company names configured in the directory
+    (skips entries like corob.com that have no "company", since those are
+    internal-staff domains, not client orgs)."""
+    with open(_DIRECTORY_PATH) as f:
+        directory = json.load(f)
+    companies = {entry["company"] for entry in directory.values() if entry.get("company")}
+    return sorted(companies)

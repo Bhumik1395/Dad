@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, FileText, FileX, Search } from "lucide-react";
-import { getPmDashboard, getPmFilterOptions, pmPdfUrl } from "../../services/pmApi";
+import { getCompanies, getPmDashboard, getPmFilterOptions, pmPdfUrl } from "../../services/pmApi";
 import { useAuth } from "../../auth/AuthContext";
 import { PmMonthlyTrendChart } from "../../components/charts/PmMonthlyTrendChart";
 import { PmWeeklyTrendChart } from "../../components/charts/PmWeeklyTrendChart";
@@ -49,6 +49,26 @@ export default function PmDashboard() {
     const [employeeCompany, setEmployeeCompany] = useState(myCompany ?? "");
     const isEmployee = roles.includes("corob_employee");
     const activeCompany = isEmployee ? employeeCompany : myCompany ?? undefined;
+
+    const { data: companies, isLoading: isLoadingCompanies, isError: isCompaniesError } = useQuery({
+        queryKey: ["companies"],
+        queryFn: () => getCompanies(token!),
+        enabled: !!token && isEmployee,
+        staleTime: Infinity,
+    });
+
+    const handleEmployeeCompanyChange = (company: string) => {
+        setEmployeeCompany(company);
+        setState("");
+        setOverallMonth("");
+        setWeeklyMonth(undefined);
+        setDealerSearchInput("");
+        setDealerSearch("");
+        setDetailState("");
+        setDetailMonth("");
+        setPage(1);
+        setExpandedRegions(new Set());
+    };
 
     const { data: filterOptions } = useQuery({
         queryKey: ["pmFilterOptions", activeCompany],
@@ -116,18 +136,28 @@ export default function PmDashboard() {
         <div className="p-6">
             {isEmployee && (
                 <div className="mb-4">
-                    <input
+                    <select
                         className="border rounded-lg px-3 py-2 text-sm w-72"
-                        placeholder="Company (e.g. AKZO Nobel Paints)"
                         value={employeeCompany}
-                        onChange={(e) => setEmployeeCompany(e.target.value)}
-                    />
+                        onChange={(e) => handleEmployeeCompanyChange(e.target.value)}
+                        disabled={isLoadingCompanies}
+                    >
+                        <option value="">
+                            {isLoadingCompanies ? "Loading companies..." : "Select a company"}
+                        </option>
+                        {companies?.companies.map((company) => (
+                            <option key={company} value={company}>{company}</option>
+                        ))}
+                    </select>
+                    {isCompaniesError && (
+                        <p className="mt-1 text-xs text-red-600">Unable to load companies.</p>
+                    )}
                 </div>
             )}
 
             {!activeCompany && (
                 <p className="text-sm text-gray-500">
-                    {isEmployee ? "Enter a company to view its PM dashboard." : "No company assigned to this account."}
+                    {isEmployee ? "Select a company to view its PM dashboard." : "No company assigned to this account."}
                 </p>
             )}
 

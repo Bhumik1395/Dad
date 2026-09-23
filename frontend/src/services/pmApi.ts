@@ -96,7 +96,7 @@ export function uploadPmFiles(
             let body: any = {};
             try {
                 body = JSON.parse(xhr.responseText);
-            } catch {}
+            } catch { }
             if (xhr.status >= 200 && xhr.status < 300) resolve(body);
             else reject(body.detail ?? body ?? { message: "Upload failed" });
         };
@@ -139,6 +139,11 @@ export async function getPmFilterOptions(token: string, company?: string): Promi
     if (company) params.set("company", company);
     const res = await fetch(`${API_BASE}/api/pm/filters?${params}`, { headers: authHeaders(token) });
     return handle<PmFilterOptions>(res);
+}
+
+export async function getCompanies(token: string): Promise<{ companies: string[] }> {
+    const res = await fetch(`${API_BASE}/api/companies`, { headers: authHeaders(token) });
+    return handle<{ companies: string[] }>(res);
 }
 
 export async function deleteAllPmData(token: string, company?: string): Promise<{ company: string; deleted: boolean }> {
