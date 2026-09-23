@@ -4,6 +4,7 @@ import { Menu, LogOut, FileText, UploadCloud, ChevronDown, ChevronRight } from "
 import { downloadPdfReport } from "../../services/api";
 import { FocusFilterProvider, useFocusFilter } from "../../context/FocusFilterContext";
 import { useAuth } from "../../auth/AuthContext";
+import corobLogo from "../../assets/corob-logo.png";
 
 interface NavLeaf {
     to: string;
@@ -131,9 +132,7 @@ function DashboardShellInner() {
     return (
         <div className="h-screen flex flex-col overflow-hidden" style={{ background: "var(--color-bg)" }}>
             <header className="shrink-0 flex items-center justify-between px-8 py-5 bg-white border-b-2 border-black">
-                <div className="text-2xl font-extrabold tracking-tight lowercase">
-                    cor<span style={{ color: "var(--color-accent)" }}>o</span>b
-                </div>
+                <img src={corobLogo} alt="Corob" className="h-8 w-auto" />
                 <div className="flex items-center gap-4">
                     <div className="text-right leading-tight">
                         <p className="font-semibold text-gray-900">{username}</p>
