@@ -38,6 +38,7 @@ export default function App() {
                         <Route index element={<Navigate to="focus" replace />} />
                         <Route path="focus" element={<FocusMode />} />
                         <Route path="pm" element={<PmDashboard />} />
+                        <Route path="pm/upload" element={<PmUploadPage />} />
                         <Route path="employees" element={<EmployeeAnalysis />} />
                         <Route path="utilization" element={<EngineerUtilization />} />
                         <Route path="upload" element={<UploadPage />} />

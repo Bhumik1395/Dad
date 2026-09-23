@@ -7,10 +7,13 @@ import { useAuth } from "../../auth/AuthContext";
 
 export default function PmUploadPage() {
     const navigate = useNavigate();
-    const { token } = useAuth();
+    const { token, roles } = useAuth();
     const [dragOver, setDragOver] = useState(false);
     const [progress, setProgress] = useState(0);
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
+    const isEmployee = roles.includes("corob_employee");
+    const dashboardPath = isEmployee ? "/dashboard/pm" : "/customer/pm";
 
     const mutation = useMutation({
         mutationFn: (files: File[]) => uploadPmFiles(files, token!, setProgress),
@@ -39,6 +42,7 @@ export default function PmUploadPage() {
                 <p className="text-center text-gray-500 mb-6">
                     Drag and drop one or more PM Data Excel (.xlsx) files. Files are merged
                     together automatically, and duplicate tickets are deduplicated.
+                    {isEmployee && " Each company is detected automatically from the \"Master Customer\" column, so one upload can cover multiple companies at once."}
                 </p>
 
                 {mutation.isError && (
@@ -61,6 +65,15 @@ export default function PmUploadPage() {
                                 {mutation.data.files.reduce((sum, f) => sum + f.row_count, 0)} rows processed
                                 across {mutation.data.files.length} file(s).
                             </p>
+                            {mutation.data.companies.length > 0 && (
+                                <ul className="text-sm mt-2 space-y-0.5">
+                                    {mutation.data.companies.map((c) => (
+                                        <li key={c.company}>
+                                            <span className="font-medium">{c.company}</span> — {c.total_rows_stored} total rows stored
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     </div>
                 )}
@@ -128,7 +141,7 @@ export default function PmUploadPage() {
 
                         {mutation.isSuccess && (
                             <button
-                                onClick={() => navigate("/customer/pm")}
+                                onClick={() => navigate(dashboardPath)}
                                 className="w-full mt-3 border text-sm font-medium px-4 py-2.5 rounded-md hover:bg-gray-50"
                             >
                                 Go to dashboard
