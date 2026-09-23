@@ -16,6 +16,7 @@ export function PmWeeklyTrendChart({ data }: { data: PmWeeklyTrendRow[] }) {
                 name: "PMs Done",
                 type: "bar",
                 data: data.map((d) => d.pm_count),
+                itemStyle: { borderRadius: [6, 6, 0, 0] },
                 label: { show: true, position: "top", fontSize: 11, color: "#333" },
             },
         ],
