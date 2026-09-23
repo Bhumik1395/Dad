@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { getFocusDashboard, getFilterOptions } from "../services/api";
+import { getFocusDashboard, getFilterOptions, getQuarterlyDashboard } from "../services/api";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
 import { RegionVisitTypeChart } from "../components/charts/RegionVisitTypeChart";
 import { RepeatMachinesTable } from "../components/tables/RepeatMachinesTable";
@@ -14,11 +14,14 @@ function formatHoursOnly(hours: number | null): string {
     return `${hours} hrs`;
 }
 
+const QUARTERS = ["Q1", "Q2", "Q3", "Q4"];
+
 export default function FocusMode() {
     const [filters, setFilters] = useState<Record<string, string>>({});
     const [page, setPage] = useState(1);
     const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
     const { setCustomer } = useFocusFilter();
+    const [activeQuarter, setActiveQuarter] = useState("Q1");
 
     const { data: filterOptions } = useQuery({
         queryKey: ["filterOptions"],
@@ -30,6 +33,16 @@ export default function FocusMode() {
         queryFn: () => getFocusDashboard(filters, page, 50),
         placeholderData: keepPreviousData,
     });
+
+    const {
+        data: quarterlyData,
+        isLoading: quarterlyLoading,
+    } = useQuery({
+        queryKey: ["quarterly"],
+        queryFn: getQuarterlyDashboard,
+    });
+
+    const loading = isLoading || quarterlyLoading;
 
     const updateFilter = (key: string, value: string) => {
         setPage(1);
@@ -51,7 +64,7 @@ export default function FocusMode() {
         });
     };
 
-    if (isLoading) return <FocusModeSkeleton />;
+    if (loading) return <FocusModeSkeleton />;
 
     return (
         <div className="p-6">
@@ -172,6 +185,56 @@ export default function FocusMode() {
                     <div className="bg-white rounded-xl border p-4 mb-4">
                         <h3 className="text-sm font-medium mb-2">Month-on-Month Trend</h3>
                         <MonthlyTrendChart data={data.monthlyTrend} />
+                    </div>
+
+                    <div className="bg-white rounded-xl border p-4 mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-sm font-medium">Quarterly Analysis</h3>
+                            <div className="flex gap-1">
+                                {QUARTERS.map((q) => (
+                                    <button
+                                        key={q}
+                                        onClick={() => setActiveQuarter(q)}
+                                        className="px-3 py-1.5 text-sm rounded-md border"
+                                        style={
+                                            activeQuarter === q
+                                                ? { background: "var(--color-accent-light)", color: "var(--color-accent)", borderColor: "var(--color-accent)" }
+                                                : { borderColor: "#d1d5db", color: "#4b5563" }
+                                        }
+                                    >
+                                        {q}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        {quarterlyData ? (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
+                                        <th className="text-left p-3">Quarter</th>
+                                        <th className="text-left p-3">Total Calls</th>
+                                        <th className="text-left p-3">Under Norm %</th>
+                                        <th className="text-left p-3">Repeat Calls</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {quarterlyData.table.map((row) => (
+                                        <tr
+                                            key={row.quarter}
+                                            className="border-t"
+                                            style={row.quarter === activeQuarter ? { background: "var(--color-accent-light)" } : undefined}
+                                        >
+                                            <td className="p-3 font-medium">{row.quarter}</td>
+                                            <td className="p-3">{row.calls.toLocaleString()}</td>
+                                            <td className="p-3">{row.under_norm_pct}%</td>
+                                            <td className="p-3">{row.repeat}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p className="text-sm text-gray-400">Quarterly data unavailable.</p>
+                        )}
                     </div>
 
                     <div className="bg-white rounded-xl border p-4 mb-4">

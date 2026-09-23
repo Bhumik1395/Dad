@@ -27,6 +27,23 @@ export function FocusModeSkeleton() {
 
             <SkeletonPanel titleWidth="w-44" height={240} className="mb-4" />
             <SkeletonPanel titleWidth="w-56" height={280} className="mb-4" />
+
+            <div className="bg-white rounded-xl border p-4 mb-4" style={{ borderColor: "var(--color-border)" }}>
+                <div className="flex items-center justify-between mb-3">
+                    <Skeleton className="h-4 w-40" />
+                    <div className="flex gap-1">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <Skeleton key={i} className="h-8 w-12" />
+                        ))}
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-8 w-full" />
+                    ))}
+                </div>
+            </div>
+
             <SkeletonPanel titleWidth="w-48" height={200} className="mb-4" />
 
             <div className="bg-white rounded-xl border overflow-hidden" style={{ borderColor: "var(--color-border)" }}>
