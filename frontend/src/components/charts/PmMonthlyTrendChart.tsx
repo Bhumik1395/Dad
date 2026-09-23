@@ -23,6 +23,7 @@ export function PmMonthlyTrendChart({ data }: { data: PmMonthlyTrendRow[] }) {
                 name: "Total PMs",
                 type: "bar",
                 data: data.map((d) => d.pm_count),
+                itemStyle: { borderRadius: [6, 6, 0, 0] },
                 label: { show: true, position: "top", fontSize: 12, color: "#333" },
             },
         ],
