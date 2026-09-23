@@ -308,10 +308,6 @@ export default function PmDashboard() {
                                     value={detailMonth}
                                     onChange={(e) => { setPage(1); setDetailMonth(e.target.value); }}
                                 >
-                                    <option value="">All Months</option>
-                                    {filterOptions?.months.map((m) => (
-                                        <option key={m} value={m}>{formatMonthFull(m)}</option>
-                                    ))}
                                 </select>
                                 <div className="relative">
                                     <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
