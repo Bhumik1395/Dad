@@ -178,10 +178,6 @@ export default function PmDashboard() {
                         value={overallMonth}
                         onChange={(e) => { setPage(1); setOverallMonth(e.target.value); }}
                     >
-                        <option value="">All Months</option>
-                        {filterOptions?.months.map((m) => (
-                            <option key={m} value={m}>{formatMonthShort(m)}</option>
-                        ))}
                     </select>
                     {isFetching && !isLoading && (
                         <span className="text-xs text-gray-400">Updating…</span>
