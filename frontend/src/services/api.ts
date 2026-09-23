@@ -134,23 +134,31 @@ export interface UtilizationResponse {
     supervisors: SupervisorRow[];
 }
 
-export interface UploadResponse {
-    session_id: string;
-    row_count: number;
-    files: { filename: string; row_count: number }[];
+export interface CombinedUploadResponse {
+    serviceCalls: {
+        session_id: string;
+        row_count: number;
+        files: { filename: string; row_count: number }[];
+    } | null;
+    pm: {
+        files: { filename: string; row_count: number }[];
+        companies: { company: string; total_rows_stored: number }[];
+    } | null;
 }
 
-export function uploadExcel(
+export function uploadCombined(
     files: File[],
+    token: string,
     onProgress?: (pct: number) => void
-): Promise<UploadResponse> {
+): Promise<CombinedUploadResponse> {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         const form = new FormData();
         files.forEach((f) => form.append("files", f));
 
-        xhr.open("POST", `${API_BASE}/api/upload`);
-        xhr.withCredentials = true;
+        xhr.open("POST", `${API_BASE}/api/upload/combined`);
+        xhr.withCredentials = true; // still needed so the Service Calls session cookie gets stored
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
         xhr.upload.onprogress = (event) => {
             if (event.lengthComputable && onProgress) {

@@ -23,10 +23,7 @@ const navGroups: NavGroupDef[] = [
     },
     {
         label: "Preventive Measure",
-        children: [
-            { to: "/dashboard/pm", label: "PM Overview" },
-            { to: "/dashboard/pm/upload", label: "Upload PM Data" },
-        ],
+        children: [{ to: "/dashboard/pm", label: "Preventive Measure" }],
     },
     {
         label: "Engineer Utilization",
@@ -171,7 +168,7 @@ function DashboardShellInner() {
                                             : { color: "#374151" }
                                     }
                                 >
-                                    <UploadCloud size={16} /> Upload Service Calls
+                                    <UploadCloud size={16} /> Upload Data
                                 </NavLink>
 
                                 {customer && (

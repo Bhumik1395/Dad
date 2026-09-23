@@ -1,21 +1,19 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { UploadCloud, X, AlertCircle, FileSpreadsheet } from "lucide-react";
-import { uploadExcel } from "../services/api";
+import { UploadCloud, X, AlertCircle, FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { uploadCombined } from "../services/api";
+import { useAuth } from "../auth/AuthContext";
 
 export default function UploadPage() {
     const navigate = useNavigate();
+    const { token } = useAuth();
     const [dragOver, setDragOver] = useState(false);
     const [progress, setProgress] = useState(0);
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
     const mutation = useMutation({
-        mutationFn: (files: File[]) => uploadExcel(files, setProgress),
-        onSuccess: () => {
-            setProgress(100);
-            navigate("/dashboard/focus");
-        },
+        mutationFn: (files: File[]) => uploadCombined(files, token!, setProgress),
         onError: () => setProgress(0),
     });
 
@@ -38,12 +36,13 @@ export default function UploadPage() {
         <div className="p-6 max-w-3xl mx-auto">
             <div className="bg-white rounded-xl border p-10" style={{ borderColor: "var(--color-border)" }}>
                 <h1 className="text-2xl font-semibold text-center mb-2">
-                    Upload your service call report
+                    Upload data
                 </h1>
                 <p className="text-center text-gray-500 mb-6">
-                    Drag and drop one or more Excel (.xlsx) files containing the quarterly or
-                    employee analytics data. Uploading replaces the current dashboard data;
-                    multiple files are merged together automatically.
+                    Drag and drop Service Calls and/or PM Excel (.xlsx) files together —
+                    each file is detected automatically and routed to the right dashboard.
+                    Uploading a Service Calls file replaces the current session's data;
+                    PM files are merged into existing data per company.
                 </p>
 
                 {mutation.isError && (
@@ -54,6 +53,38 @@ export default function UploadPage() {
                             <p className="text-sm">{(mutation.error as any)?.message}</p>
                         </div>
                         <button onClick={() => mutation.reset()}><X size={16} /></button>
+                    </div>
+                )}
+
+                {mutation.isSuccess && (
+                    <div className="flex items-start gap-2 bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4">
+                        <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
+                        <div className="flex-1 space-y-3">
+                            <p className="font-medium text-sm">Upload complete</p>
+
+                            {mutation.data.serviceCalls && (
+                                <div>
+                                    <p className="text-sm font-medium">Service Calls</p>
+                                    <p className="text-sm">
+                                        {mutation.data.serviceCalls.row_count} rows across{" "}
+                                        {mutation.data.serviceCalls.files.length} file(s).
+                                    </p>
+                                </div>
+                            )}
+
+                            {mutation.data.pm && (
+                                <div>
+                                    <p className="text-sm font-medium">Preventive Measure</p>
+                                    <ul className="text-sm space-y-0.5">
+                                        {mutation.data.pm.companies.map((c) => (
+                                            <li key={c.company}>
+                                                <span className="font-medium">{c.company}</span> — {c.total_rows_stored} total rows stored
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -79,7 +110,7 @@ export default function UploadPage() {
                                 <UploadCloud style={{ color: "var(--color-accent)" }} size={26} />
                             </div>
                             <p className="font-medium mb-1">Drag & Drop file(s) here</p>
-                            <p className="text-sm text-gray-500 mb-4">Supported formats: .xlsx (Max 50MB each, up to 10 files)</p>
+                            <p className="text-sm text-gray-500 mb-4">Service Calls or PM data, .xlsx (Max 50MB each, up to 10 files)</p>
                             <div className="flex items-center gap-3 mb-4">
                                 <hr className="flex-1" /><span className="text-xs text-gray-400">OR</span><hr className="flex-1" />
                             </div>
@@ -115,6 +146,27 @@ export default function UploadPage() {
                                 >
                                     Upload {pendingFiles.length} file{pendingFiles.length > 1 ? "s" : ""}
                                 </button>
+                            </div>
+                        )}
+
+                        {mutation.isSuccess && (
+                            <div className="flex gap-2 mt-3">
+                                {mutation.data.serviceCalls && (
+                                    <button
+                                        onClick={() => navigate("/dashboard/focus")}
+                                        className="flex-1 border text-sm font-medium px-4 py-2.5 rounded-md hover:bg-gray-50"
+                                    >
+                                        Go to Service Calls
+                                    </button>
+                                )}
+                                {mutation.data.pm && (
+                                    <button
+                                        onClick={() => navigate("/dashboard/pm")}
+                                        className="flex-1 border text-sm font-medium px-4 py-2.5 rounded-md hover:bg-gray-50"
+                                    >
+                                        Go to PM Overview
+                                    </button>
+                                )}
                             </div>
                         )}
                     </>
