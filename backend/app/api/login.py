@@ -1,19 +1,15 @@
-"""Proxies email/password sign-in to Supabase so the backend can rate-limit
-attempts. The frontend should POST here instead of calling Supabase's
-/auth/v1/token endpoint directly for password sign-in; token refresh and
-sign-out can keep going straight to Supabase since those aren't brute-force
-targets in the same way.
-"""
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
-import httpx
 
-from app.core.supabase_auth_config import SUPABASE_URL
-from app.services.rate_limit_service import (
+from app.core.mysql_auth import authenticate
+from app.services.db_rate_limit import (
     enforce_not_locked_out,
     get_or_set_device_id,
     record_failed_attempt,
     clear_attempts,
+    enforce_account_not_locked,
+    record_account_failure,
+    clear_account_failures,
     _client_ip,
 )
 
@@ -31,28 +27,15 @@ def login(body: LoginRequest, request: Request, response: Response):
     ip = _client_ip(request)
 
     enforce_not_locked_out(device_id, ip)
+    enforce_account_not_locked(body.email)
 
     try:
-        resp = httpx.post(
-            f"{SUPABASE_URL}/auth/v1/token?grant_type=password",
-            json={"email": body.email, "password": body.password},
-            headers={"apikey": _supabase_anon_key()},
-            timeout=10.0,
-        )
-    except httpx.RequestError as exc:
-        raise HTTPException(502, {"error": "auth_server_unreachable", "message": str(exc)})
-
-    if resp.status_code != 200:
+        token = authenticate(body.email, body.password)
+    except HTTPException:
         record_failed_attempt(device_id, ip)
-        raise HTTPException(401, {"error": "invalid_credentials", "message": "Incorrect email or password."})
+        record_account_failure(body.email)
+        raise
 
     clear_attempts(device_id, ip)
-    return resp.json()
-
-
-def _supabase_anon_key() -> str:
-    import os
-    key = os.getenv("SUPABASE_ANON_KEY", "")
-    if not key:
-        raise HTTPException(500, {"error": "server_misconfigured", "message": "SUPABASE_ANON_KEY not set."})
-    return key
+    clear_account_failures(body.email)
+    return {"access_token": token}
