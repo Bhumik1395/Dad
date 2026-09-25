@@ -1,6 +1,3 @@
--- Corob Service Analytics — self-hosted MySQL schema (Phase 1)
--- Run as: mysql -u root -p < schema.sql
-
 CREATE DATABASE IF NOT EXISTS corob_service
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE corob_service;
