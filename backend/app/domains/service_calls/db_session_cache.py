@@ -1,7 +1,3 @@
-"""Replaces app/services/cache_service.py. Same function signatures — callers
-(quarterly.py, employees.py, utilization.py, focus.py, filters.py, reports.py,
-session.py) only need their import line changed.
-"""
 import io
 import uuid
 from datetime import datetime, timedelta

@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { ReactNode } from "react";
-import { supabase } from "../lib/supabaseClient";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const TOKEN_STORAGE_KEY = "corob_token";
 
 interface AuthContextValue {
     initialized: boolean;
@@ -26,6 +26,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [company, setCompany] = useState<string | null>(null);
     const [authError, setAuthError] = useState<string | null>(null);
 
+    const clearIdentity = useCallback(() => {
+        setToken(null);
+        setUsername(null);
+        setRoles([]);
+        setCompany(null);
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }, []);
+
     const resolveIdentity = useCallback(async (accessToken: string): Promise<boolean> => {
         const res = await fetch(`${API_BASE}/api/me`, {
             headers: { Authorization: `Bearer ${accessToken}` },
@@ -33,10 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!res.ok) {
             const body = await res.json().catch(() => ({}));
             setAuthError(body?.detail?.message ?? "Your account isn't authorized yet.");
-            setToken(null);
-            setUsername(null);
-            setRoles([]);
-            setCompany(null);
+            clearIdentity();
             return false;
         }
         const data = await res.json();
@@ -45,52 +50,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles(data.roles);
         setCompany(data.company);
         setAuthError(null);
+        localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
         return true;
-    }, []);
+    }, [clearIdentity]);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            const accessToken = data.session?.access_token;
-            (accessToken ? resolveIdentity(accessToken) : Promise.resolve(false)).finally(() =>
-                setInitialized(true)
-            );
-        });
-
-        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (session?.access_token) {
-                resolveIdentity(session.access_token);
-            } else {
-                setToken(null);
-                setUsername(null);
-                setRoles([]);
-                setCompany(null);
-            }
-        });
-
-        return () => listener.subscription.unsubscribe();
+        const saved = localStorage.getItem(TOKEN_STORAGE_KEY);
+        (saved ? resolveIdentity(saved) : Promise.resolve(false)).finally(() => setInitialized(true));
     }, [resolveIdentity]);
 
     const signIn = useCallback(async (email: string, password: string): Promise<string | null> => {
         setAuthError(null);
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return error.message;
-        if (data.session) {
-            const ok = await resolveIdentity(data.session.access_token);
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include", // needed for the device-id rate-limit cookie
+                body: JSON.stringify({ email, password }),
+            });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                return body?.detail?.message ?? "Incorrect email or password.";
+            }
+            const { access_token } = await res.json();
+            const ok = await resolveIdentity(access_token);
             if (!ok) {
-                await supabase.auth.signOut();
                 return authError ?? "Your account isn't authorized for this app yet.";
             }
+            return null;
+        } catch {
+            return "Couldn't reach the server. Please try again.";
         }
-        return null;
     }, [resolveIdentity, authError]);
 
     const logout = useCallback(() => {
-        supabase.auth.signOut();
-        setToken(null);
-        setUsername(null);
-        setRoles([]);
-        setCompany(null);
-    }, []);
+        clearIdentity();
+    }, [clearIdentity]);
 
     const value: AuthContextValue = {
         initialized,

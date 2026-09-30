@@ -1,8 +1,3 @@
-"""Replaces the Redis-backed parts of app/services/rate_limit_service.py.
-get_or_set_device_id and _client_ip are unchanged (pure cookie/header logic) —
-copy those two functions over as-is. This file replaces enforce_not_locked_out,
-record_failed_attempt, and clear_attempts.
-"""
 from datetime import datetime, timedelta
 
 from fastapi import HTTPException, status
@@ -79,13 +74,6 @@ def clear_attempts(device_id: str, ip: str) -> None:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM login_attempts WHERE device_ip_key = %s", (key,))
 
-
-# --- Per-account tracking (in addition to per-device/IP above) -------------
-# Device-id and IP can both be reset by an attacker (clear cookies, rotate
-# proxy/VPN). Locking the *account itself* after repeated failures, regardless
-# of where they came from, closes that bypass. Uses the same table — the key
-# is just an "email:" prefix instead of "device:ip" so it shares the schema
-# and the periodic-purge event in schema.sql.
 ACCOUNT_MAX_ATTEMPTS = 8
 ACCOUNT_WINDOW_SECONDS = 15 * 60
 ACCOUNT_LOCKOUT_SECONDS = 15 * 60
