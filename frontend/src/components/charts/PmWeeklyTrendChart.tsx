@@ -1,5 +1,5 @@
 import ReactECharts from "echarts-for-react";
-import type { PmWeeklyTrendRow } from "../../services/pmApi";
+import type { PmWeeklyTrendRow } from "../../api/pm";
 
 export function PmWeeklyTrendChart({ data }: { data: PmWeeklyTrendRow[] }) {
     const option = {

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
-from app.services.cache_service import get_session_data
-from app.services.filters_service import compute_filter_options
+from app.domains.service_calls.session_cache import get_session_data
+from app.domains.service_calls.filters_service import compute_filter_options
 
 router = APIRouter()
 

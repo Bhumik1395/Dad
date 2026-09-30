@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import type { RepeatMachineRow } from "../../services/api";
+import type { RepeatMachineRow } from "../../api/serviceCalls";
 
 export function RepeatMachinesTable({
     rows, page, pageSize, totalRows, onPageChange,

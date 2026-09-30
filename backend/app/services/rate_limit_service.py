@@ -5,7 +5,7 @@ import uuid
 
 from fastapi import HTTPException, Request, Response, status
 
-from app.services.cache_service import r
+from app.domains.service_calls.session_cache import r
 
 MAX_ATTEMPTS = 5
 WINDOW_SECONDS = 15 * 60

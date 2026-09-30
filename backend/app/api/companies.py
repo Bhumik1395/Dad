@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.core.supabase_auth import CurrentUser, require_roles
+from app.core.auth import CurrentUser, require_roles
 from app.core.domain_directory import list_companies
 
 router = APIRouter()

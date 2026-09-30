@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Request, Response
-from app.services.cache_service import delete_session
+from app.domains.service_calls.session_cache import delete_session
+
 router = APIRouter()
+
+
 @router.delete("/api/session")
 def end_session(request: Request, response: Response):
     session_id = request.cookies.get("session_id")

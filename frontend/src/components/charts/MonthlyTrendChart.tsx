@@ -1,5 +1,5 @@
 import ReactECharts from "echarts-for-react";
-import type { MonthlyTrendRow } from "../../services/api";
+import type { MonthlyTrendRow } from "../../api/serviceCalls";
 
 export function MonthlyTrendChart({ data }: { data: MonthlyTrendRow[] }) {
     const option = {

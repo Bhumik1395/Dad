@@ -1,5 +1,5 @@
 import pandas as pd
-from app.services.employee_mapping_service import load_employee_mapping
+from app.shared.employee_mapping_service import load_employee_mapping
 
 
 def compute_employees(df: pd.DataFrame, page: int = 1, page_size: int = 50, search: str = None) -> dict:

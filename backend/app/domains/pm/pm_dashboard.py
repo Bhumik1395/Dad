@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from app.core.supabase_auth import CurrentUser, require_roles
-from app.services.pm_cache_service import get_pm_data
-from app.services.pm_analytics import compute_pm_dashboard, compute_pm_filter_options
-from app.services.pm_common import resolve_company
+from app.core.auth import CurrentUser, require_roles
+from app.domains.pm.cache import get_pm_data
+from app.domains.pm.analytics import compute_pm_dashboard, compute_pm_filter_options
+from app.domains.pm.common import resolve_company
 
 router = APIRouter()
 

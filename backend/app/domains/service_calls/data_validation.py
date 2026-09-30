@@ -1,6 +1,6 @@
 import io
 import pandas as pd
-from app.core.schema_contract import SCHEMA_CONTRACT
+from app.domains.service_calls.schema_contract import SCHEMA_CONTRACT
 
 
 class ValidationError(Exception):

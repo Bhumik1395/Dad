@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from app.core.supabase_auth import CurrentUser
+from app.core.auth import CurrentUser
 
 
 def resolve_company(user: CurrentUser, company_param: str | None) -> str:

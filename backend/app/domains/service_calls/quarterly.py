@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
-from app.services.cache_service import get_session_data
-from app.services.quarterly_analytics import compute_quarterly
+from app.domains.service_calls.session_cache import get_session_data
+from app.domains.service_calls.quarterly_analytics import compute_quarterly
 
 router = APIRouter()
 

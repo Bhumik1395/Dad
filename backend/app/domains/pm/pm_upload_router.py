@@ -1,14 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 import pandas as pd
 
-from app.core.supabase_auth import CurrentUser, require_roles
-from app.services.pm_validation import validate_pm_excel, ValidationError
-from app.services.pm_excel_service import process_pm_dataframe
-from app.services.pm_cache_service import save_pm_data, delete_pm_data
-from app.services.pm_common import resolve_company
+from app.core.auth import CurrentUser, require_roles
+from app.domains.pm.validation import validate_pm_excel, ValidationError
+from app.domains.pm.excel_service import process_pm_dataframe
+from app.domains.pm.cache import save_pm_data, delete_pm_data
+from app.domains.pm.common import resolve_company
 
 router = APIRouter()
-
 MAX_FILES = 10
 
 

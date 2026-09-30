@@ -4,18 +4,18 @@ import openpyxl
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 
-from app.core.pm_schema_contract import PM_SCHEMA_CONTRACT
-from app.core.schema_contract import SCHEMA_CONTRACT
-from app.core.supabase_auth import CurrentUser, require_roles
-from app.services.cache_service import create_session
+from app.core.auth import CurrentUser, require_roles
 from app.core.config import SESSION_TTL_SECONDS
-from app.services.data_validation import ValidationError as ServiceValidationError
-from app.services.data_validation import validate_excel
-from app.services.excel_service import process_dataframe
-from app.services.pm_cache_service import save_pm_data
-from app.services.pm_excel_service import process_pm_dataframe
-from app.services.pm_validation import ValidationError as PmValidationError
-from app.services.pm_validation import validate_pm_excel
+from app.domains.pm.cache import save_pm_data
+from app.domains.pm.excel_service import process_pm_dataframe
+from app.domains.pm.schema_contract import PM_SCHEMA_CONTRACT
+from app.domains.pm.validation import ValidationError as PmValidationError
+from app.domains.pm.validation import validate_pm_excel
+from app.domains.service_calls.excel_service import process_dataframe
+from app.domains.service_calls.schema_contract import SCHEMA_CONTRACT
+from app.domains.service_calls.session_cache import create_session
+from app.domains.service_calls.validation import ValidationError as ServiceValidationError
+from app.domains.service_calls.validation import validate_excel
 
 router = APIRouter()
 
@@ -94,12 +94,14 @@ def upload_combined(
             unrecognized.append(f.filename)
 
     if unrecognized:
+        service_sheet = SCHEMA_CONTRACT["sheet_name"]
+        pm_sheet = PM_SCHEMA_CONTRACT["sheet_name"]
         raise HTTPException(400, {
             "error": "unrecognized_sheet",
             "message": (
                 f"Couldn't tell what kind of data this is for: {', '.join(unrecognized)}. "
-                f"Expected a sheet named '{SCHEMA_CONTRACT['sheet_name']}' (Service Calls) "
-                f"or '{PM_SCHEMA_CONTRACT['sheet_name']}' (PM)."
+                f"Expected a sheet named '{service_sheet}' (Service Calls) "
+                f"or '{pm_sheet}' (PM)."
             ),
         })
 

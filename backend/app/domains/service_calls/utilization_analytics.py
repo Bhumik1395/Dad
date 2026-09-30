@@ -1,5 +1,5 @@
 import pandas as pd
-from app.services.employee_mapping_service import load_employee_mapping, load_supervisor_mapping
+from app.shared.employee_mapping_service import load_employee_mapping, load_supervisor_mapping
 
 WORKING_DAYS_PER_MONTH = 26
 

@@ -1,9 +1,9 @@
 import io
 import re
 import pandas as pd
-from app.services.cache_service import r  # reuse the same Redis/Valkey connection
+from app.domains.service_calls.session_cache import r  # reuse the same Redis/Valkey connection
 from app.core.auth_config import PM_DATA_TTL_SECONDS
-from app.services.pm_excel_service import dedupe_pm_rows
+from app.domains.pm.excel_service import dedupe_pm_rows
 
 
 def _company_key(company: str) -> str:

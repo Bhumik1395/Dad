@@ -4,10 +4,9 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
+from app.core.auth_config import PM_DATA_TTL_SECONDS
 from app.core.db import get_connection
-from app.services.pm_excel_service import dedupe_pm_rows
-
-PM_DATA_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days, matches old PM_DATA_TTL_SECONDS
+from app.domains.pm.excel_service import dedupe_pm_rows
 
 
 def _slug(company: str) -> str:
@@ -19,7 +18,7 @@ def get_pm_data(company: str) -> pd.DataFrame | None:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT payload FROM pm_data WHERE company_slug = %s AND expires_at > NOW()",
+                "SELECT payload FROM pm_data WHERE company_slug = %s AND expires_at > UTC_TIMESTAMP()",
                 (slug,),
             )
             row = cur.fetchone()
@@ -36,8 +35,9 @@ def get_pm_data(company: str) -> pd.DataFrame | None:
 
 
 def save_pm_data(company: str, df: pd.DataFrame) -> int:
-    """Merge `df` into whatever's already stored for this company, dedupe by
-    ticket_no (new rows win), persist. Returns the resulting row count."""
+    """Merge `df` (freshly-uploaded rows) into whatever is already stored for
+    this company, dedupe by ticket_no (new rows win), and persist. Returns
+    the resulting row count."""
     existing = get_pm_data(company)
     combined = pd.concat([existing, df], ignore_index=True) if existing is not None else df
     combined = dedupe_pm_rows(combined)
@@ -62,8 +62,8 @@ def save_pm_data(company: str, df: pd.DataFrame) -> int:
 
 
 def delete_pm_data(company: str) -> bool:
-    slug = _slug(company)
+    """Wipes all stored PM data for a company. True if there was anything to delete."""
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM pm_data WHERE company_slug = %s", (slug,))
+            cur.execute("DELETE FROM pm_data WHERE company_slug = %s", (_slug(company),))
             return cur.rowcount > 0

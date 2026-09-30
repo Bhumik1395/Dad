@@ -25,4 +25,5 @@ def get_pool() -> PooledDB:
 
 
 def get_connection():
+    """Use as a context manager: `with get_connection() as conn: ...`"""
     return get_pool().connection()

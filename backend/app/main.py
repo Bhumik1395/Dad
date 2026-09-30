@@ -1,9 +1,13 @@
 import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api import me, companies, combined_upload, login
+from app.core.security import CsrfOriginCheckMiddleware, SecurityHeadersMiddleware
+from app.domains.pm import upload_router as pm_upload_router
+from app.domains.pm import dashboard_router as pm_dashboard_router
 from app.domains.service_calls import (
     router as service_calls_router,
     quarterly_router,
@@ -13,15 +17,19 @@ from app.domains.service_calls import (
     reports_router,
     session_router,
 )
-from app.domains.pm import upload_router as pm_upload_router, dashboard_router as pm_dashboard_router
-from app.core.security import CsrfOriginCheckMiddleware, SecurityHeadersMiddleware
 
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "http://localhost:5173")
-ALLOWED_HOST = ALLOWED_ORIGIN.split("://", 1)[-1].split("/", 1)[0]
+
+# Hostnames this API will answer for (the Host header it sees). Behind our
+# Nginx that is the public domain; on a platform like Render it is the
+# platform's own hostname — list any extras in ALLOWED_HOSTS (comma separated).
+_origin_host = ALLOWED_ORIGIN.split("://", 1)[-1].split("/", 1)[0].split(":")[0]
+_extra_hosts = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
+ALLOWED_HOSTS = sorted({_origin_host, "localhost", "127.0.0.1", *_extra_hosts})
 
 app = FastAPI(title="Corob Service Analytics API")
 
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=[ALLOWED_HOST, "localhost"])
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(CsrfOriginCheckMiddleware, allowed_origin=ALLOWED_ORIGIN)
 

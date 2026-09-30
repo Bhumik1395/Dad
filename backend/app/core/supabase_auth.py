@@ -1,50 +1,37 @@
-"""Supabase Auth verification.
+"""Self-hosted auth, replacing app/core/supabase_auth.py.
 
-Supabase issues a JWT after email/password sign-in. We verify it against
-Supabase's own JWKS endpoint (works as long as the project uses the modern
-asymmetric signing keys -- new Supabase projects default to this; if yours
-is an older project still on the legacy shared-secret (HS256) scheme,
-rotate to asymmetric keys under Project Settings -> Auth -> JWT Keys first).
+Same CurrentUser / require_roles / get_current_user interface as before, so every
+file that did `from app.core.supabase_auth import ...` only needs its import line
+changed to `from app.core.mysql_auth import ...`.
 
-We don't ask Supabase who's an "employee" vs a "customer" -- that's derived
-from the email's domain (everything after @) via domain_directory.py, which
-you edit by hand. This means onboarding a whole company is one line, not
-one line per person.
+Requires: pip install bcrypt python-jose[cryptography] pymysql dbutils
 """
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 
-import httpx
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
 from jose.exceptions import JWTError
 
-from app.core.supabase_auth_config import SUPABASE_ISSUER, SUPABASE_JWKS_URL
-from app.core.domain_directory import look_up_domain
+from app.core.db import get_connection
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
-_jwks_cache: dict = {"keys": None, "fetched_at": 0.0}
-_JWKS_TTL_SECONDS = 3600
-
-
-def _get_jwks() -> dict:
-    now = time.time()
-    if _jwks_cache["keys"] is None or (now - _jwks_cache["fetched_at"]) > _JWKS_TTL_SECONDS:
-        resp = httpx.get(SUPABASE_JWKS_URL, timeout=5.0)
-        resp.raise_for_status()
-        _jwks_cache["keys"] = resp.json()
-        _jwks_cache["fetched_at"] = now
-    return _jwks_cache["keys"]
+JWT_SECRET = os.environ["JWT_SECRET"]  # fail loudly if not set — don't default this
+JWT_ALGORITHM = "HS256"
+JWT_TTL_SECONDS = int(os.getenv("JWT_TTL_SECONDS", str(60 * 60 * 8)))  # 8 hours
 
 
 @dataclass
 class CurrentUser:
     sub: str
-    username: str  # email
+    username: str
     roles: list[str] = field(default_factory=list)
     company: str | None = None
 
@@ -57,25 +44,54 @@ class CurrentUser:
         return "customer" in self.roles
 
 
+def _issue_token(user_row: dict) -> str:
+    now = int(time.time())
+    claims = {
+        "sub": str(user_row["id"]),
+        "email": user_row["email"],
+        "role": user_row["role"],
+        "company": user_row.get("company_name"),
+        "iat": now,
+        "exp": now + JWT_TTL_SECONDS,
+    }
+    return jwt.encode(claims, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+# A real bcrypt hash of a random value, used only so that authenticate() spends
+# the same amount of CPU time whether or not the email exists — otherwise an
+# attacker can enumerate valid accounts purely by measuring response latency
+# (row-found-then-checkpw is slow; row-not-found-and-return-early is fast).
+_DUMMY_HASH = bcrypt.hashpw(b"not-a-real-password-just-for-timing", bcrypt.gensalt()).decode("utf-8")
+
+
+def authenticate(email: str, password: str) -> str:
+    """Verifies email/password against MySQL, returns a signed JWT. Raises
+    HTTPException(401) on bad credentials, mirroring the old Supabase-backed
+    login() behaviour so app/api/login.py barely has to change."""
+    email = email.strip().lower()
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """SELECT u.id, u.email, u.password_hash, u.role, u.is_active,
+                          c.name AS company_name
+                   FROM users u LEFT JOIN companies c ON u.company_id = c.id
+                   WHERE u.email = %s""",
+                (email,),
+            )
+            row = cur.fetchone()
+
+    hash_to_check = row["password_hash"] if row else _DUMMY_HASH
+    password_ok = bcrypt.checkpw(password.encode("utf-8"), hash_to_check.encode("utf-8"))
+
+    if row is None or not row["is_active"] or not password_ok:
+        raise HTTPException(401, {"error": "invalid_credentials", "message": "Incorrect email or password."})
+
+    return _issue_token(row)
+
+
 def _decode_token(token: str) -> dict:
     try:
-        jwks = _get_jwks()
-        unverified_header = jwt.get_unverified_header(token)
-        key = next((k for k in jwks["keys"] if k["kid"] == unverified_header.get("kid")), None)
-        if key is None:
-            _jwks_cache["keys"] = None
-            jwks = _get_jwks()
-            key = next((k for k in jwks["keys"] if k["kid"] == unverified_header.get("kid")), None)
-        if key is None:
-            raise HTTPException(401, {"error": "unknown_signing_key"})
-
-        return jwt.decode(
-            token,
-            key,
-            algorithms=[key.get("alg", "ES256")],
-            issuer=SUPABASE_ISSUER,
-            audience="authenticated",
-        )
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
     except JWTError as exc:
         raise HTTPException(401, {"error": "invalid_token", "message": str(exc)}) from exc
 
@@ -87,23 +103,11 @@ async def get_current_user(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, {"error": "missing_token"})
 
     claims = _decode_token(creds.credentials)
-    email = claims.get("email", "").strip().lower()
-    if not email or "@" not in email:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, {"error": "no_email"})
-
-    domain = email.split("@", 1)[1]
-    entry = look_up_domain(domain)
-    if entry is None:
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN,
-            {"error": "domain_not_authorized", "message": f"{domain} isn't set up for access yet. Contact your admin."},
-        )
-
     return CurrentUser(
         sub=claims["sub"],
-        username=email,
-        roles=[entry["role"]],
-        company=entry.get("company"),
+        username=claims["email"],
+        roles=[claims["role"]],
+        company=claims.get("company"),
     )
 
 
@@ -114,3 +118,15 @@ def require_roles(*allowed: str):
         return user
 
     return _check
+
+
+def create_user(email: str, password: str, role: str, company_id: int | None = None) -> int:
+    """Admin helper for onboarding accounts (call from a one-off script/shell, not exposed as an API route)."""
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO users (email, password_hash, role, company_id) VALUES (%s, %s, %s, %s)",
+                (email.strip().lower(), password_hash, role, company_id),
+            )
+            return cur.lastrowid

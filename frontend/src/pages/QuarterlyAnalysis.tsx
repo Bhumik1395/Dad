@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getQuarterlyDashboard } from "../services/api";
+import { getQuarterlyDashboard } from "../api/serviceCalls";
 
 const QUARTERS = ["Q1", "Q2", "Q3", "Q4"];
 

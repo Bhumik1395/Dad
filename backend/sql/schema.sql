@@ -73,9 +73,9 @@ INSERT INTO companies (name, email_domain) VALUES
 -- CREATE EVENT purge_expired_cache
 --   ON SCHEDULE EVERY 1 HOUR
 --   DO BEGIN
---     DELETE FROM service_call_sessions WHERE expires_at < NOW();
---     DELETE FROM pm_data WHERE expires_at < NOW();
---     DELETE FROM login_attempts WHERE locked_until IS NOT NULL AND locked_until < NOW()
---                                    AND window_expires_at < NOW();
+--     DELETE FROM service_call_sessions WHERE expires_at < UTC_TIMESTAMP();
+--     DELETE FROM pm_data WHERE expires_at < UTC_TIMESTAMP();
+--     DELETE FROM login_attempts WHERE locked_until IS NOT NULL AND locked_until < UTC_TIMESTAMP()
+--                                    AND window_expires_at < UTC_TIMESTAMP();
 --   END$$
 -- DELIMITER ;

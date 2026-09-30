@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getUtilizationDashboard, getFilterOptions } from "../services/api";
+import { getUtilizationDashboard, getFilterOptions } from "../api/serviceCalls";
 import { Search, ChevronDown, ChevronRight } from "lucide-react";
 
 export default function EngineerUtilization() {

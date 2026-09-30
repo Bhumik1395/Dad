@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from app.core.mysql_auth import authenticate
-from app.services.db_rate_limit import (
+from app.core.auth import authenticate
+from app.shared.rate_limit_service import (
     enforce_not_locked_out,
     get_or_set_device_id,
     record_failed_attempt,

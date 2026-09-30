@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { getEmployeeDashboard } from "../services/api";
+import { getEmployeeDashboard } from "../api/serviceCalls";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { Search } from "lucide-react";

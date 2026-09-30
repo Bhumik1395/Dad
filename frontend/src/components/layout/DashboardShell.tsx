@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Menu, LogOut, FileText, UploadCloud, ChevronDown, ChevronRight } from "lucide-react";
-import { downloadPdfReport } from "../../services/api";
+import { downloadPdfReport } from "../../api/serviceCalls";
 import { FocusFilterProvider, useFocusFilter } from "../../context/FocusFilterContext";
 import { useAuth } from "../../auth/AuthContext";
 import corobLogo from "../../assets/corob-logo.png";

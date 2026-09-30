@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { UploadCloud, X, AlertCircle, FileSpreadsheet, CheckCircle2 } from "lucide-react";
-import { uploadCombined } from "../services/api";
+import { uploadCombined } from "../api/serviceCalls";
 import { useAuth } from "../auth/AuthContext";
 
 export default function UploadPage() {

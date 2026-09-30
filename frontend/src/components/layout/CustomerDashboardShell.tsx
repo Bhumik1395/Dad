@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { BarChart2, UploadCloud, LogOut } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
-import { deleteAllPmData } from "../../services/pmApi";
+import { deleteAllPmData } from "../../api/pm";
 import { ConfirmModal } from "../ConfirmModal";
 
 const navItems = [

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { getFocusDashboard, getFilterOptions, getQuarterlyDashboard } from "../services/api";
+import { getFocusDashboard, getFilterOptions, getQuarterlyDashboard } from "../api/serviceCalls";
 import { SimpleBarChart } from "../components/charts/SimpleBarChart";
 import { RegionVisitTypeChart } from "../components/charts/RegionVisitTypeChart";
 import { RepeatMachinesTable } from "../components/tables/RepeatMachinesTable";

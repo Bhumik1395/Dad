@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { UploadCloud, X, AlertCircle, FileSpreadsheet, CheckCircle2 } from "lucide-react";
-import { uploadPmFiles } from "../../services/pmApi";
+import { uploadPmFiles } from "../../api/pm";
 import { useAuth } from "../../auth/AuthContext";
 
 export default function PmUploadPage() {

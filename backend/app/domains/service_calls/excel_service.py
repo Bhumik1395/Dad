@@ -1,5 +1,5 @@
 import pandas as pd
-from app.core.schema_contract import COLUMN_MAP
+from app.domains.service_calls.schema_contract import COLUMN_MAP
 
 
 def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:

@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException, Request
-
-from app.core.mysql_auth import CurrentUser, require_roles
-from app.services.db_session_cache import get_session_data
 import pandas as pd
+
+from app.core.auth import CurrentUser, require_roles
+from app.domains.service_calls.session_cache import get_session_data
 
 
 def get_authorized_session_df(

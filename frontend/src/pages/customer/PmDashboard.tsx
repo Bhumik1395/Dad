@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, FileText, FileX, Search } from "lucide-react";
-import { getPmDashboard, getPmFilterOptions, getCompanies, pmPdfUrl } from "../../services/pmApi";
+import { getPmDashboard, getPmFilterOptions, getCompanies, pmPdfUrl } from "../../api/pm";
 import { useAuth } from "../../auth/AuthContext";
 import { PmMonthlyTrendChart } from "../../components/charts/PmMonthlyTrendChart";
 import { PmWeeklyTrendChart } from "../../components/charts/PmWeeklyTrendChart";

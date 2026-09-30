@@ -1,5 +1,5 @@
 import ReactECharts from "echarts-for-react";
-import type { PmMonthlyTrendRow } from "../../services/pmApi";
+import type { PmMonthlyTrendRow } from "../../api/pm";
 
 function formatMonthShort(yearMonth: string): string {
     const [year, month] = yearMonth.split("-");
