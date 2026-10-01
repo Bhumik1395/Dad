@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api import me, companies, combined_upload, login
-from app.core.security import CsrfOriginCheckMiddleware, SecurityHeadersMiddleware
+from app.core.security_middleware import CsrfOriginCheckMiddleware, SecurityHeadersMiddleware
 from app.domains.pm import upload_router as pm_upload_router
 from app.domains.pm import dashboard_router as pm_dashboard_router
 from app.domains.service_calls import (
