@@ -6,7 +6,7 @@ import pandas as pd
 
 from app.core.auth_config import PM_DATA_TTL_SECONDS
 from app.core.db import get_connection
-from app.domains.pm.excel_service import dedupe_pm_rows
+from app.domains.pm.pm_excel_service import dedupe_pm_rows
 
 
 def _slug(company: str) -> str:
