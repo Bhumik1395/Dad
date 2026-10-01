@@ -22,9 +22,15 @@ ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "http://localhost:5173")
 
 # Hostnames this API will answer for (the Host header it sees). Behind our
 # Nginx that is the public domain; on a platform like Render it is the
-# platform's own hostname — list any extras in ALLOWED_HOSTS (comma separated).
+# platform's own hostname. List any extras in ALLOWED_HOSTS (comma separated),
+# or set ALLOWED_HOSTS=* to allow any host.
 _origin_host = ALLOWED_ORIGIN.split("://", 1)[-1].split("/", 1)[0].split(":")[0]
 _extra_hosts = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
+
+if "*" in _extra_hosts:
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = list({_origin_host, "localhost", "127.0.0.1", *_extra_hosts})
 
 app = FastAPI(title="Corob Service Analytics API")
 
