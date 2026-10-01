@@ -1,11 +1,3 @@
-"""Self-hosted auth, replacing app/core/supabase_auth.py.
-
-Same CurrentUser / require_roles / get_current_user interface as before, so every
-file that did `from app.core.supabase_auth import ...` only needs its import line
-changed to `from app.core.mysql_auth import ...`.
-
-Requires: pip install bcrypt python-jose[cryptography] pymysql dbutils
-"""
 from __future__ import annotations
 
 import os
