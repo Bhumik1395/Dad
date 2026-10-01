@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 import io
 import pandas as pd
 from app.domains.service_calls.session_cache import get_session_data
-from app.domains.service_calls.analytics import compute_focus
+from app.domains.service_calls.focus_analytics import compute_focus
 from app.domains.service_calls.chart_render import render_bar_chart
 from app.domains.service_calls.pdf_service import generate_pdf
 

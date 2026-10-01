@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
 from app.domains.service_calls.session_cache import get_session_data
-from app.domains.service_calls.analytics import compute_focus
+from app.domains.service_calls.focus_analytics import compute_focus
 
 router = APIRouter()
 

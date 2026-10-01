@@ -1,6 +1,5 @@
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from weasyprint import HTML
 from datetime import datetime
 
 _TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -23,6 +22,7 @@ def _data_uri_only_fetcher(url: str):
 
 
 def generate_pdf(kpis: dict, state_breakdown: list, charts: dict, report_title: str, period_str: str) -> bytes:
+    from weasyprint import HTML
     template = env.get_template("report_template.html")
     html_content = template.render(
         kpis=kpis,
