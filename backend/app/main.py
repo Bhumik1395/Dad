@@ -25,7 +25,6 @@ ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "http://localhost:5173")
 # platform's own hostname — list any extras in ALLOWED_HOSTS (comma separated).
 _origin_host = ALLOWED_ORIGIN.split("://", 1)[-1].split("/", 1)[0].split(":")[0]
 _extra_hosts = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
-ALLOWED_HOSTS = sorted({_origin_host, "localhost", "127.0.0.1", *_extra_hosts})
 
 app = FastAPI(title="Corob Service Analytics API")
 
