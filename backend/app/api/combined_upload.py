@@ -10,7 +10,7 @@ from app.domains.pm.cache import save_pm_data
 from app.domains.pm.pm_excel_service import process_pm_dataframe
 from app.domains.pm.schema_contract import PM_SCHEMA_CONTRACT
 from app.domains.pm.pm_validation import ValidationError as PmValidationError
-from app.domains.pm.validation import validate_pm_excel
+from app.domains.pm.pm_validation import validate_pm_excel
 from app.domains.service_calls.excel_service import process_dataframe
 from app.domains.service_calls.schema_contract import SCHEMA_CONTRACT
 from app.domains.service_calls.session_cache import create_session
