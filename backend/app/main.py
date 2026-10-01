@@ -61,6 +61,10 @@ app.include_router(me.router)
 app.include_router(combined_upload.router)
 app.include_router(companies.router)
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 
 @app.get("/health/db")
 def health_db():
