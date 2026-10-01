@@ -8,6 +8,11 @@ _pool: PooledDB | None = None
 def get_pool() -> PooledDB:
     global _pool
     if _pool is None:
+        ssl_kwargs = {}
+        if os.getenv("MYSQL_SSL", "").lower() in ("1", "true", "yes"):
+            ca = os.getenv("MYSQL_SSL_CA")
+            ssl_kwargs["ssl"] = {"ca": ca} if ca else {"check_hostname": False}
+
         _pool = PooledDB(
             creator=pymysql,
             maxconnections=int(os.getenv("MYSQL_POOL_SIZE", "10")),
@@ -20,6 +25,8 @@ def get_pool() -> PooledDB:
             charset="utf8mb4",
             cursorclass=pymysql.cursors.DictCursor,
             autocommit=True,
+            connect_timeout=10,
+            **ssl_kwargs,
         )
     return _pool
 

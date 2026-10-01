@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-
+from app.core.db import get_connection
 from app.api import me, companies, combined_upload, login
 from app.core.security_middleware import CsrfOriginCheckMiddleware, SecurityHeadersMiddleware
 from app.domains.pm import upload_router as pm_upload_router
@@ -62,6 +62,8 @@ app.include_router(combined_upload.router)
 app.include_router(companies.router)
 
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+@app.get("/health/db")
+def health_db():
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT 1 AS ok")
+        return cur.fetchone()
