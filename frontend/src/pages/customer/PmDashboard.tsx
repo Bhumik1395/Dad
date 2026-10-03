@@ -1,26 +1,22 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, FileText, FileX, Search } from "lucide-react";
 import { getPmDashboard, getPmFilterOptions, getCompanies, pmPdfUrl } from "../../api/pm";
 import { useAuth } from "../../auth/AuthContext";
-import { PmMonthlyTrendChart } from "../../components/charts/PmMonthlyTrendChart";
-import { PmWeeklyTrendChart } from "../../components/charts/PmWeeklyTrendChart";
+import { PmTrendChart } from "../../components/charts/PmTrendChart";
 import { PdfViewerModal } from "../../components/PdfViewerModal";
 import { PmDashboardSkeleton } from "../../components/skeletons/Pmdashboardskeleton";
+import { Card } from "../../components/ui/Card";
+import { KpiCard } from "../../components/ui/KpiCard";
+import { Pagination } from "../../components/ui/Pagination";
+import { Segmented } from "../../components/ui/Segmented";
+import { Select } from "../../components/ui/Select";
+import { formatMonthFull, formatMonthShort, percentOf } from "../../lib/format";
 
-function formatMonthShort(yearMonth: string): string {
-    const [year, month] = yearMonth.split("-");
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const monthName = monthNames[parseInt(month, 10) - 1] ?? month;
-    return `${monthName}/${year.slice(-2)}`;
-}
+type TrendView = "monthly" | "weekly";
 
-function formatMonthFull(yearMonth: string): string {
-    const [year, month] = yearMonth.split("-");
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const monthName = monthNames[parseInt(month, 10) - 1] ?? month;
-    return `${monthName} ${year}`;
-}
+const th = "px-4 py-2.5 text-left text-xs font-medium text-muted";
+const td = "px-4 py-2.5";
 
 export default function PmDashboard() {
     const { token, roles, company: myCompany } = useAuth();
@@ -30,6 +26,7 @@ export default function PmDashboard() {
     const [openPdf, setOpenPdf] = useState<{ url: string; title: string } | null>(null);
     const [pdfMissingTicket, setPdfMissingTicket] = useState<string | null>(null);
 
+    const [trendView, setTrendView] = useState<TrendView>("monthly");
     const [weeklyMonth, setWeeklyMonth] = useState<string | undefined>(undefined);
 
     const [dealerSearchInput, setDealerSearchInput] = useState("");
@@ -63,31 +60,27 @@ export default function PmDashboard() {
 
     const { data, isLoading, isFetching, isError, error } = useQuery({
         queryKey: ["pmDashboard", activeCompany, state, weeklyMonth, dealerSearch, detailState, detailMonth, page],
-        queryFn: () => getPmDashboard(token!, {
-            company: activeCompany,
-            state: state || undefined,
-            month: weeklyMonth,
-            dealerCode: dealerSearch || undefined,
-            detailState: detailState || undefined,
-            detailMonth: detailMonth || undefined,
-            page,
-        }),
+        queryFn: () =>
+            getPmDashboard(token!, {
+                company: activeCompany,
+                state: state || undefined,
+                month: weeklyMonth,
+                dealerCode: dealerSearch || undefined,
+                detailState: detailState || undefined,
+                detailMonth: detailMonth || undefined,
+                page,
+            }),
         enabled: !!token && !!activeCompany,
         placeholderData: keepPreviousData,
     });
 
-    const [jumpValue, setJumpValue] = useState(String(page));
-    useEffect(() => {
-        setJumpValue(String(page));
-    }, [page]);
-
-    const toggleRegion = (region: string) => {
+    const toggleRegion = (region: string) =>
         setExpandedRegions((prev) => {
             const next = new Set(prev);
-            if (next.has(region)) next.delete(region); else next.add(region);
+            if (next.has(region)) next.delete(region);
+            else next.add(region);
             return next;
         });
-    };
 
     const handleOpenPdf = async (ticketNo: string) => {
         setPdfMissingTicket(null);
@@ -105,285 +98,284 @@ export default function PmDashboard() {
         }
     };
 
-    const totalPages = data ? Math.max(1, Math.ceil(data.pmDetailTable.totalRows / data.pmDetailTable.pageSize)) : 1;
+    const showContent = !!activeCompany && !isLoading && !isError && !!data;
+    const selectedWeeklyMonth = weeklyMonth ?? data?.weeklyTrendMonth ?? "";
 
-    const handleJump = () => {
-        const n = parseInt(jumpValue, 10);
-        if (!isNaN(n) && n >= 1 && n <= totalPages) {
-            setPage(n);
-        } else {
-            setJumpValue(String(page));
-        }
-    };
+    const trendPoints =
+        data == null
+            ? []
+            : trendView === "monthly"
+                ? data.monthlyTrend.map((d) => ({ label: formatMonthShort(d.year_month), value: d.pm_count }))
+                : data.weeklyTrend.map((d) => ({ label: d.year_week, value: d.pm_count }));
 
     return (
-        <div className="p-6">
-            {isEmployee && (
-                <div className="mb-4">
-                    <select
-                        className="border rounded-lg px-3 py-2 text-sm w-72"
+        <div className="flex flex-col gap-4 px-6 pb-6">
+            <div className="flex flex-wrap items-center gap-2">
+                {isEmployee && (
+                    <Select
+                        className="w-64"
+                        aria-label="Company"
                         value={employeeCompany}
-                        onChange={(e) => { setPage(1); setEmployeeCompany(e.target.value); }}
+                        onChange={(e) => {
+                            setPage(1);
+                            setEmployeeCompany(e.target.value);
+                        }}
                     >
                         <option value="">Select a company…</option>
                         {companiesData?.companies.map((c) => (
                             <option key={c} value={c}>{c}</option>
                         ))}
-                    </select>
-                </div>
-            )}
+                    </Select>
+                )}
+                {activeCompany && (
+                    <Select
+                        className="w-44"
+                        aria-label="State"
+                        value={state}
+                        onChange={(e) => {
+                            setPage(1);
+                            setState(e.target.value);
+                        }}
+                    >
+                        <option value="">All States</option>
+                        {filterOptions?.states.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                        ))}
+                    </Select>
+                )}
+                {isFetching && !isLoading && <span className="text-xs text-muted">Updating…</span>}
+            </div>
 
             {!activeCompany && (
-                <p className="text-sm text-gray-500">
-                    {isEmployee ? "Enter a company to view its PM dashboard." : "No company assigned to this account."}
+                <p className="text-sm text-muted">
+                    {isEmployee ? "Select a company to view its PM dashboard." : "No company assigned to this account."}
                 </p>
             )}
 
             {activeCompany && isLoading && <PmDashboardSkeleton />}
 
-            {activeCompany && !isLoading && (
-                <div className="flex items-center gap-3 mb-6">
-                    <select
-                        className="border rounded-lg px-3 py-2 text-sm"
-                        value={state}
-                        onChange={(e) => { setPage(1); setState(e.target.value); }}
-                    >
-                        <option value="">All States</option>
-                        {filterOptions?.states.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    {isFetching && !isLoading && (
-                        <span className="text-xs text-gray-400">Updating…</span>
-                    )}
-                </div>
-            )}
-
             {activeCompany && !isLoading && isError && (
-                <p className="text-sm text-red-600">
-                    {(error as any)?.message ?? "No PM data uploaded yet for this company."}
-                </p>
+                <Card>
+                    <p className="text-sm text-red">{(error as any)?.message ?? "No PM data uploaded yet for this company."}</p>
+                </Card>
             )}
 
-            {activeCompany && !isLoading && !isError && data && (
+            {showContent && data && (
                 <>
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                        <KpiCard label="Total PMs" value={data.kpis.totalPms} />
-                        <KpiCard label="PM Done" value={data.kpis.pmDone} />
-                        <KpiCard label="Dispute" value={data.kpis.pmNotDone} />
+                    <div className="grid grid-cols-3 gap-4">
+                        <KpiCard label="Total PMs" value={data.kpis.totalPms.toLocaleString()} />
+                        <KpiCard
+                            tone="green"
+                            label="PM Done"
+                            value={data.kpis.pmDone.toLocaleString()}
+                            chip={`${percentOf(data.kpis.pmDone, data.kpis.totalPms)}%`}
+                            caption="of total"
+                        />
+                        <KpiCard
+                            tone="red"
+                            label="Dispute"
+                            value={data.kpis.pmNotDone.toLocaleString()}
+                            chip={`${percentOf(data.kpis.pmNotDone, data.kpis.totalPms)}%`}
+                            caption="of total"
+                        />
                     </div>
 
-                    {!state && data.regionBreakdown.length > 0 && (
-                        <div className="bg-white rounded-xl border overflow-hidden mb-4">
-                            <div className="px-4 pt-3 pb-2">
-                                <h3 className="text-sm font-medium">Region-wise Breakdown</h3>
-                            </div>
-                            <table className="w-full text-sm border-collapse">
-                                <thead>
-                                    <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                                        <th className="text-left p-3 border border-gray-200 w-8"></th>
-                                        <th className="text-left p-3 border border-gray-200">Region</th>
-                                        <th className="text-left p-3 border border-gray-200">Total PMs</th>
-                                        <th className="text-left p-3 border border-gray-200">Closed</th>
-                                        <th className="text-left p-3 border border-gray-200">Open</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.regionBreakdown.map((region) => {
-                                        const isOpen = expandedRegions.has(region.region);
-                                        return (
-                                            <>
-                                                <tr key={region.region} className="cursor-pointer hover:bg-gray-50" onClick={() => toggleRegion(region.region)}>
-                                                    <td className="p-3 border border-gray-200 text-gray-400">
-                                                        {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                                    </td>
-                                                    <td className="p-3 border border-gray-200 font-medium">{region.region}</td>
-                                                    <td className="p-3 border border-gray-200">{region.total_pms}</td>
-                                                    <td className="p-3 border border-gray-200">{region.closed_pms}</td>
-                                                    <td className="p-3 border border-gray-200">{region.open_pms}</td>
-                                                </tr>
-                                                {isOpen && (
-                                                    <tr key={`${region.region}-detail`}>
-                                                        <td colSpan={5} className="border border-gray-200 p-0 bg-gray-50">
-                                                            <table className="w-full text-sm border-collapse">
-                                                                <thead>
-                                                                    <tr className="bg-gray-100 text-gray-500 text-xs uppercase">
-                                                                        <th className="text-left p-2 pl-10 border border-gray-200">State</th>
-                                                                        <th className="text-left p-2 border border-gray-200">Total PMs</th>
-                                                                        <th className="text-left p-2 border border-gray-200">Closed</th>
-                                                                        <th className="text-left p-2 border border-gray-200">Open</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody className="bg-white">
-                                                                    {region.states.map((s, i) => (
-                                                                        <tr key={s.state}>
-                                                                            <td className="p-2 pl-10 border border-gray-200">
-                                                                                <span className="text-gray-400 mr-2">#{i + 1}</span>{s.state}
-                                                                            </td>
-                                                                            <td className="p-2 border border-gray-200">{s.total_pms}</td>
-                                                                            <td className="p-2 border border-gray-200">{s.closed_pms}</td>
-                                                                            <td className="p-2 border border-gray-200">{s.open_pms}</td>
-                                                                        </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            </table>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    <div className="grid grid-cols-5 gap-4">
+                        <Card
+                            className={state || data.regionBreakdown.length === 0 ? "col-span-5" : "col-span-3"}
+                            title="PMs over time"
+                            subtitle={
+                                trendView === "monthly"
+                                    ? "New PMs per month"
+                                    : `New PMs per week — ${formatMonthFull(selectedWeeklyMonth)}`
+                            }
+                            actions={
+                                <>
+                                    {trendView === "weekly" && (
+                                        <Select
+                                            className="w-32"
+                                            aria-label="Month for weekly view"
+                                            value={selectedWeeklyMonth}
+                                            onChange={(e) => setWeeklyMonth(e.target.value || undefined)}
+                                        >
+                                            {data.availableMonths.map((m) => (
+                                                <option key={m} value={m}>{formatMonthShort(m)}</option>
+                                            ))}
+                                        </Select>
+                                    )}
+                                    <Segmented<TrendView>
+                                        label="Trend view"
+                                        value={trendView}
+                                        onChange={setTrendView}
+                                        options={[
+                                            { value: "monthly", label: "Monthly" },
+                                            { value: "weekly", label: "Weekly" },
+                                        ]}
+                                    />
+                                </>
+                            }
+                        >
+                            <PmTrendChart data={trendPoints} seriesName={trendView === "monthly" ? "PMs this month" : "PMs this week"} />
+                        </Card>
 
-                    <div className="bg-white rounded-xl border p-4 mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <div>
-                                <h3 className="text-sm font-medium">
-                                    Weekly Analysis
-                                    <span className="text-gray-400 font-normal"> — {formatMonthFull(weeklyMonth ?? data.weeklyTrendMonth ?? "")}</span>
-                                </h3>
-                                <p className="text-xs text-gray-500">New PMs completed per week</p>
-                            </div>
-                            <select
-                                className="border rounded-lg px-3 py-1.5 text-sm"
-                                value={weeklyMonth ?? data.weeklyTrendMonth ?? ""}
-                                onChange={(e) => setWeeklyMonth(e.target.value || undefined)}
-                            >
-                                {data.availableMonths.map((m) => (
-                                    <option key={m} value={m}>{formatMonthShort(m)}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <PmWeeklyTrendChart data={data.weeklyTrend} />
+                        {!state && data.regionBreakdown.length > 0 && (
+                            <Card className="col-span-2" title="Region-wise breakdown" bodyClassName="mt-3 border-t border-border">
+                                <div className="max-h-[250px] overflow-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="sticky top-0 z-10 bg-[#F6F8F7]">
+                                            <tr>
+                                                <th className={`${th} w-10`} aria-label="Expand" />
+                                                <th className={th}>Region</th>
+                                                <th className={th}>Total</th>
+                                                <th className={th}>Closed</th>
+                                                <th className={th}>Open</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {data.regionBreakdown.map((region) => {
+                                                const isOpen = expandedRegions.has(region.region);
+                                                return (
+                                                    <Fragment key={region.region}>
+                                                        <tr
+                                                            className="cursor-pointer border-t border-border hover:bg-gray-50"
+                                                            onClick={() => toggleRegion(region.region)}
+                                                        >
+                                                            <td className={`${td} text-muted`}>
+                                                                {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                                            </td>
+                                                            <td className={`${td} font-medium`}>{region.region}</td>
+                                                            <td className={`${td} tabular-nums`}>{region.total_pms.toLocaleString()}</td>
+                                                            <td className={`${td} tabular-nums text-green`}>{region.closed_pms.toLocaleString()}</td>
+                                                            <td className={`${td} tabular-nums text-red`}>{region.open_pms.toLocaleString()}</td>
+                                                        </tr>
+                                                        {isOpen &&
+                                                            region.states.map((s, i) => (
+                                                                <tr key={`${region.region}-${s.state}`} className="border-t border-border bg-[#F6F8F7] text-[13px]">
+                                                                    <td />
+                                                                    <td className={td}>
+                                                                        <span className="mr-2 text-muted">#{i + 1}</span>
+                                                                        {s.state}
+                                                                    </td>
+                                                                    <td className={`${td} tabular-nums`}>{s.total_pms.toLocaleString()}</td>
+                                                                    <td className={`${td} tabular-nums text-green`}>{s.closed_pms.toLocaleString()}</td>
+                                                                    <td className={`${td} tabular-nums text-red`}>{s.open_pms.toLocaleString()}</td>
+                                                                </tr>
+                                                            ))}
+                                                    </Fragment>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Card>
+                        )}
                     </div>
 
-                    <div className="bg-white rounded-xl border p-4 mb-4">
-                        <h3 className="text-sm font-medium mb-2">Monthly Analysis</h3>
-                        <PmMonthlyTrendChart data={data.monthlyTrend} />
-                    </div>
-
-                    <div className="bg-white rounded-xl border overflow-hidden mb-4">
-                        <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-3">
-                            <h3 className="text-sm font-medium shrink-0">PM Detail</h3>
-                            <div className="flex items-center gap-3">
-                                <select
-                                    className="border rounded-lg px-3 py-1.5 text-sm"
+                    <Card
+                        title="PM detail"
+                        bodyClassName="mt-3 border-t border-border"
+                        actions={
+                            <>
+                                <Select
+                                    className="w-40"
+                                    aria-label="Filter detail by state"
                                     value={detailState}
-                                    onChange={(e) => { setPage(1); setDetailState(e.target.value); }}
+                                    onChange={(e) => {
+                                        setPage(1);
+                                        setDetailState(e.target.value);
+                                    }}
                                 >
                                     <option value="">All States</option>
-                                    {filterOptions?.states.map((s) => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                                <select
-                                    className="border rounded-lg px-3 py-1.5 text-sm"
+                                    {filterOptions?.states.map((s) => (
+                                        <option key={s} value={s}>{s}</option>
+                                    ))}
+                                </Select>
+                                <Select
+                                    className="w-44"
+                                    aria-label="Filter detail by month"
                                     value={detailMonth}
-                                    onChange={(e) => { setPage(1); setDetailMonth(e.target.value); }}
+                                    onChange={(e) => {
+                                        setPage(1);
+                                        setDetailMonth(e.target.value);
+                                    }}
                                 >
                                     <option value="">All Months</option>
                                     {filterOptions?.months.map((m) => (
                                         <option key={m} value={m}>{formatMonthFull(m)}</option>
                                     ))}
-                                </select>
+                                </Select>
                                 <div className="relative">
-                                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <Search size={14} aria-hidden className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                                     <input
                                         value={dealerSearchInput}
                                         onChange={(e) => setDealerSearchInput(e.target.value)}
                                         placeholder="Search dealer code…"
-                                        className="border rounded-lg pl-8 pr-3 py-1.5 text-sm w-56"
-                                        style={{ borderColor: "var(--color-border)" }}
+                                        aria-label="Search dealer code"
+                                        className="h-9 w-52 rounded-full border border-border bg-surface pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-lime"
                                     />
                                 </div>
-                            </div>
-                        </div>
-
+                            </>
+                        }
+                    >
                         {pdfMissingTicket && (
-                            <div className="mx-4 mb-2 flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-3 py-2 text-xs">
+                            <div className="mx-5 mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
                                 <FileX size={14} className="shrink-0" />
-                                PDF NOT FOUND for ticket {pdfMissingTicket}.
+                                PDF not found for ticket {pdfMissingTicket}.
                             </div>
                         )}
 
-                        <table className="w-full text-sm border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                                    <th className="text-left p-3 border border-gray-200">Ticket No</th>
-                                    <th className="text-left p-3 border border-gray-200">Dealer Code</th>
-                                    <th className="text-left p-3 border border-gray-200">Dealer Name</th>
-                                    <th className="text-left p-3 border border-gray-200">Date</th>
-                                    <th className="text-left p-3 border border-gray-200">Resolution Remark</th>
-                                    <th className="text-left p-3 border border-gray-200">PDF</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {data.pmDetailTable.rows.map((row) => (
-                                    <tr key={row.ticket_no}>
-                                        <td className="p-3 border border-gray-200">{row.ticket_no}</td>
-                                        <td className="p-3 border border-gray-200">{row.dealer_code}</td>
-                                        <td className="p-3 border border-gray-200">{row.dealer_name}</td>
-                                        <td className="p-3 border border-gray-200">{row.call_date}</td>
-                                        <td className="p-3 border border-gray-200">{row.remarks}</td>
-                                        <td className="p-3 border border-gray-200">
-                                            <button
-                                                onClick={() => handleOpenPdf(row.ticket_no)}
-                                                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md border hover:bg-gray-50"
-                                                style={{ borderColor: "var(--color-border)" }}
-                                            >
-                                                <FileText size={12} /> View
-                                            </button>
-                                        </td>
+                        <div className="max-h-[340px] overflow-auto">
+                            <table className="w-full text-sm">
+                                <thead className="sticky top-0 z-10 bg-[#F6F8F7]">
+                                    <tr>
+                                        <th className={th}>Ticket no</th>
+                                        <th className={th}>Dealer code</th>
+                                        <th className={th}>Dealer name</th>
+                                        <th className={th}>Date</th>
+                                        <th className={th}>Resolution remark</th>
+                                        <th className={th}>PDF</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <div className="flex items-center justify-between p-3 border-t text-sm text-gray-500">
-                            <span>{data.pmDetailTable.totalRows.toLocaleString()} total records</span>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    disabled={page <= 1}
-                                    onClick={() => setPage((p) => p - 1)}
-                                    className="px-3 py-1 border rounded-md disabled:opacity-40"
-                                >
-                                    Prev
-                                </button>
-                                <span>Page</span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={totalPages}
-                                    value={jumpValue}
-                                    onChange={(e) => setJumpValue(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && handleJump()}
-                                    onBlur={handleJump}
-                                    className="w-14 border rounded-md px-2 py-1 text-center"
-                                />
-                                <span>of {totalPages}</span>
-                                <button
-                                    disabled={page >= totalPages}
-                                    onClick={() => setPage((p) => p + 1)}
-                                    className="px-3 py-1 border rounded-md disabled:opacity-40"
-                                >
-                                    Next
-                                </button>
-                            </div>
+                                </thead>
+                                <tbody>
+                                    {data.pmDetailTable.rows.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6} className="p-6 text-center text-muted">
+                                                No PM records match these filters
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {data.pmDetailTable.rows.map((row) => (
+                                        <tr key={row.ticket_no} className="border-t border-border hover:bg-gray-50">
+                                            <td className={`${td} whitespace-nowrap font-medium`}>{row.ticket_no}</td>
+                                            <td className={td}>{row.dealer_code}</td>
+                                            <td className={td}>{row.dealer_name}</td>
+                                            <td className={`${td} whitespace-nowrap`}>{row.call_date}</td>
+                                            <td className={td}>{row.remarks}</td>
+                                            <td className={td}>
+                                                <button
+                                                    onClick={() => handleOpenPdf(row.ticket_no)}
+                                                    className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs transition-colors hover:bg-gray-50"
+                                                >
+                                                    <FileText size={12} /> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
+
+                        <Pagination
+                            page={page}
+                            pageSize={data.pmDetailTable.pageSize}
+                            totalRows={data.pmDetailTable.totalRows}
+                            onPageChange={setPage}
+                        />
+                    </Card>
                 </>
             )}
 
-            {openPdf && (
-                <PdfViewerModal url={openPdf.url} title={openPdf.title} onClose={() => setOpenPdf(null)} />
-            )}
-        </div>
-    );
-}
-
-function KpiCard({ label, value }: { label: string; value: string | number }) {
-    return (
-        <div className="bg-white rounded-xl border p-4">
-            <p className="text-sm text-gray-500">{label}</p>
-            <p className="text-2xl font-semibold mt-1">{value}</p>
+            {openPdf && <PdfViewerModal url={openPdf.url} title={openPdf.title} onClose={() => setOpenPdf(null)} />}
         </div>
     );
 }

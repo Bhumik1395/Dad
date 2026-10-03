@@ -72,18 +72,6 @@ export interface FocusDashboardResponse {
     };
 }
 
-export interface QuarterlyRow {
-    quarter: string;
-    calls: number;
-    under_norm_pct: number;
-    repeat: number;
-}
-
-export interface QuarterlyDashboardResponse {
-    table: QuarterlyRow[];
-    regionBreakdown: { quarter: string; region: string; calls: number }[];
-}
-
 export interface FilterOptions {
     customers: string[];
     states: string[];
@@ -200,15 +188,6 @@ export async function getFocusDashboard(
 ): Promise<FocusDashboardResponse> {
     const params = new URLSearchParams({ ...filters, page: String(page), page_size: String(pageSize) });
     const res = await fetch(`${API_BASE}/api/dashboard/focus?${params}`, {
-        credentials: "include",
-    });
-    if (res.status === 401) throw { error: "session_expired" };
-    if (!res.ok) throw await res.json();
-    return res.json();
-}
-
-export async function getQuarterlyDashboard(): Promise<QuarterlyDashboardResponse> {
-    const res = await fetch(`${API_BASE}/api/dashboard/quarterly`, {
         credentials: "include",
     });
     if (res.status === 401) throw { error: "session_expired" };

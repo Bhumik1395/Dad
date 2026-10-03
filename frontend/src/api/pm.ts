@@ -53,6 +53,27 @@ export interface PmDashboardResponse {
     };
 }
 
+export interface ReviewQuestion {
+    done: boolean;
+    phrase?: string;
+    rowsAffected?: number;
+    examples?: string[];
+    unresolvedRows: number;
+    totalRows: number;
+}
+
+export interface ReviewHistoryRow {
+    id: number;
+    phrase: string;
+    label: "PM Done" | "Dispute";
+    answered_by: string;
+    is_active: number | boolean;
+    created_at: string;
+    updated_at: string;
+    log_count: number;
+    rowsAffected: number | null;
+}
+
 export interface PmFilterOptions {
     states: string[];
     months: string[];
@@ -159,4 +180,47 @@ export async function deleteAllPmData(token: string, company?: string): Promise<
 export function pmPdfUrl(ticketNo: string): string {
     const safeName = ticketNo.replace(/\//g, "_");
     return `/pm-pdfs/${encodeURIComponent(safeName)}.pdf`;
+}
+
+export async function getReviewNext(token: string, company?: string, skip: string[] = []): Promise<ReviewQuestion> {
+    const params = new URLSearchParams();
+    if (company) params.set("company", company);
+    if (skip.length) params.set("skip", skip.join("|"));
+    const res = await fetch(`${API_BASE}/api/pm/review/next?${params}`, { headers: authHeaders(token) });
+    return handle<ReviewQuestion>(res);
+}
+
+export async function answerReview(token: string, phrase: string, label: "PM Done" | "Dispute") {
+    const res = await fetch(`${API_BASE}/api/pm/review/answer`, {
+        method: "POST",
+        headers: { ...authHeaders(token), "Content-Type": "application/json" },
+        body: JSON.stringify({ phrase, label }),
+    });
+    return handle<{ saved: boolean }>(res);
+}
+
+export async function getReviewHistory(token: string, company?: string, scope: "mine" | "all" = "mine") {
+    const params = new URLSearchParams({ scope });
+    if (company) params.set("company", company);
+    const res = await fetch(`${API_BASE}/api/pm/review/history?${params}`, { headers: authHeaders(token) });
+    return handle<{ rules: ReviewHistoryRow[] }>(res);
+}
+
+export async function changeReviewLabel(token: string, id: number, label: "PM Done" | "Dispute") {
+    const res = await fetch(`${API_BASE}/api/pm/review/rules/${id}/label`, {
+        method: "POST",
+        headers: { ...authHeaders(token), "Content-Type": "application/json" },
+        body: JSON.stringify({ label }),
+    });
+    return handle<{ changed: boolean }>(res);
+}
+
+export async function removeReviewRule(token: string, id: number) {
+    const res = await fetch(`${API_BASE}/api/pm/review/rules/${id}`, { method: "DELETE", headers: authHeaders(token) });
+    return handle<{ removed: boolean }>(res);
+}
+
+export async function restoreReviewRule(token: string, id: number) {
+    const res = await fetch(`${API_BASE}/api/pm/review/rules/${id}/restore`, { method: "POST", headers: authHeaders(token) });
+    return handle<{ restored: boolean }>(res);
 }
